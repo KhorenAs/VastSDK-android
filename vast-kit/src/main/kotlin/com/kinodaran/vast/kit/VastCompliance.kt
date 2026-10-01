@@ -27,6 +27,7 @@ internal class VastCompliance(private val session: VastAdSession) {
 
     fun reset() {
         reportedSkipControlProblem = false
+        reportedPictureInPictureProblem = false
         skipControlDp = null
     }
 
@@ -35,6 +36,9 @@ internal class VastCompliance(private val session: VastAdSession) {
     }
 
     fun noteSkipControl(widthDp: Float, heightDp: Float) {
+        // The window lays the screen out at a few dozen dp; a control squeezed
+        // there is the window's doing, and not the one a viewer would use.
+        if (session.isInPictureInPicture.value) return
         skipControlDp = widthDp to heightDp
         val ad = session.currentSlot?.ad ?: return
         if (session.skipPresentation(ad) != VastSkipPresentation.SDK || !ad.isSkippable || reportedSkipControlProblem) return
@@ -42,8 +46,31 @@ internal class VastCompliance(private val session: VastAdSession) {
         report(ad, diagnosis)
     }
 
+    /** The window, too: once per ad, as with the surface. */
+    private var reportedPictureInPictureProblem = false
+
+    /**
+     * What `ALLOWED` costs, said out loud — and only when it costs anything: at
+     * the moment the skip control comes due with the viewer out in the window,
+     * which is the only moment §2.3 promises something they cannot see. Not when
+     * the window opens: before `skipoffset` there is no control to miss.
+     */
+    fun reportPictureInPictureUnreachableUi(ad: VastAd) {
+        if (!session.isInPictureInPicture.value || !session.canSkip.value || reportedPictureInPictureProblem) return
+        if (!ad.isSkippable || session.skipPresentation(ad) != VastSkipPresentation.SDK || session.suppressesAdUi(ad)) return
+        reportedPictureInPictureProblem = true
+        val reason = "the skip control came due while the ad was playing in the Picture in Picture window, which " +
+            "takes no touches — the viewer has to come back to the app to reach it. Set pictureInPicture to " +
+            "PAUSES_AD or SUSPENDED if that is not acceptable for your inventory."
+        VastLog.warning("skip control not on screen: $reason")
+        session.listener?.onSkipControlUnavailable(ad, reason)
+    }
+
     /** At the moment the control comes due. */
     fun verifySkipSurface(ad: VastAd) {
+        // First, and before every guard below: a surface can be present and sized
+        // and still not be where the ad is.
+        if (session.configuration.pictureInPicture == VastPictureInPicturePolicy.ALLOWED) reportPictureInPictureUnreachableUi(ad)
         if (session.skipPresentation(ad) != VastSkipPresentation.SDK || !ad.isSkippable) return
         // No control was drawn to measure — the response handed the UI to the host.
         if (session.suppressesAdUi(ad)) return

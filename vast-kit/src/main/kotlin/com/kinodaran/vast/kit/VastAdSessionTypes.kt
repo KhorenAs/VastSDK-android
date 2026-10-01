@@ -74,6 +74,35 @@ public enum class VastClickPresentation {
     DISABLED,
 }
 
+/**
+ * Whether an ad may play in the Picture in Picture window.
+ *
+ * The window shows the player and the system's media controls; the ad surface —
+ * skip control, badge, click layer — stays behind in the app. What that costs
+ * is smaller than it first looks: tapping the window returns to the app, where
+ * the whole surface is where it was. The skip control is a tap further away, not
+ * gone. So the default is to leave the window alone; the other two are for
+ * players that must keep an ad where its controls are.
+ */
+public enum class VastPictureInPicturePolicy {
+    /**
+     * The ad plays in the window, like the content it interrupted. The listener
+     * hears `onSkipControlUnavailable` when a skip control comes due while the
+     * viewer is out there and cannot see it.
+     */
+    ALLOWED,
+
+    /** Entering the window pauses the ad — reported as §3.14.1 `pause` — and leaving it resumes. */
+    PAUSES_AD,
+
+    /**
+     * The ad does not play in the window: entering it holds the ad, unreported,
+     * until the viewer is back, and `permitsPictureInPicture` is false for the
+     * length of the break so the host can turn automatic entry off.
+     */
+    SUSPENDED,
+}
+
 /** Why [VastAdSession.skip] refused. It never refuses silently: an unhonoured skip violates §2.3. */
 public sealed class VastSkipException(message: String) : Exception(message) {
     public class NoActiveAd : VastSkipException("no ad is playing")
@@ -106,6 +135,10 @@ public data class VastConfiguration(
     val resolutionTimeoutSeconds: Double = 10.0,
     val skipPresentation: VastSkipPresentation = VastSkipPresentation.SDK,
     val clickPresentation: VastClickPresentation = VastClickPresentation.SURFACE,
+    /** Whether the ad may follow the content into the Picture in Picture window. */
+    val pictureInPicture: VastPictureInPicturePolicy = VastPictureInPicturePolicy.ALLOWED,
+    /** What the system's media controls show and allow during a break; see [VastAdSession.forMediaSession]. */
+    val nowPlaying: VastNowPlayingPolicy = VastNowPlayingPolicy.DESCRIBES_AD,
     /** `null` uses the built-in clock, which samples the player every 200 ms. */
     val clock: VastClock? = null,
     /** `null` uses [VastHttpTransport] with the shared retry queue. */
@@ -172,4 +205,11 @@ public interface VastAdSessionListener {
      * nothing is asked of the listener.
      */
     public fun onReported(kind: VastBeacon.Kind, ad: VastAd?) {}
+
+    /**
+     * The activity entered or left Picture in Picture. Reported for the whole
+     * session, not only during a break: a host that hides its own controls for the
+     * window needs to know either way.
+     */
+    public fun onPictureInPictureChanged(isActive: Boolean) {}
 }

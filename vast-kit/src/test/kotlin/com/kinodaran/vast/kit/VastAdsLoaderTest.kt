@@ -8,6 +8,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.media3.common.AdViewProvider
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
@@ -35,6 +36,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -74,11 +76,16 @@ class VastAdsLoaderTest {
             events += "all finished"
         }
 
+        override fun onSkipControlUnavailable(ad: VastAd, reason: String) {
+            unavailable += reason
+        }
+
         override fun onAdProgress(ad: VastAd, timeSeconds: Double, durationSeconds: Double) {
             progress += "%.2f@%.2f".format(timeSeconds, clock.elapsedRealtime() / 1000.0)
         }
     }
     private val progress = mutableListOf<String>()
+    private val unavailable = mutableListOf<String>()
 
     @Before
     fun setUp() {
@@ -239,6 +246,172 @@ class VastAdsLoaderTest {
 
         assertTrue("pause" !in reported && "resume" !in reported, reported.toString())
         assertTrue("complete" in reported)
+    }
+
+    // MARK: - Breaks on demand
+
+    /**
+     * Asked for during the content, a break plays right away, and the content
+     * resumes where it stopped.
+     *
+     * The player is held still while the break goes in: Media3's fake clock runs
+     * the playhead ahead freely between the request and the playback thread
+     * picking up the new timeline, which on a device is a matter of milliseconds.
+     */
+    @Test
+    fun aBreakInsertedDuringTheContentPlaysNowAndTheContentResumes() {
+        val session = session(mapOf(TAG to inLine("a1")))
+        start(session)
+        runUntil { "finished a1 Completed" in events && !player.isPlayingAd && player.isPlaying }
+        runUntil { player.contentPosition > 2_000 }
+        player.pause()
+        val askedAt = player.contentPosition
+
+        session.insertBreak(VastAdsLoader.adTagUriForResponse(inLine("m1")))
+        TestPlayerRunHelper.runUntilPendingCommandsAreFullyHandled(player)
+        player.play()
+        runUntil { "started m1 1/1" in events }
+        val interruptedAt = player.contentPosition
+        runUntil { "finished m1 Completed" in events && !player.isPlayingAd }
+        val resumedAt = player.contentPosition
+        TestPlayerRunHelper.runUntilPlaybackState(player, Player.STATE_ENDED)
+
+        assertTrue(interruptedAt - askedAt in 0..1_500, "asked at $askedAt ms, interrupted at $interruptedAt ms")
+        assertTrue(resumedAt - interruptedAt in 0..1_500, "interrupted at $interruptedAt ms, resumed at $resumedAt ms")
+        assertEquals(listOf("started a1 1/1", "finished a1 Completed", "all finished", "started m1 1/1", "finished m1 Completed", "all finished"), events)
+        assertEquals(2, reported.count { it == "impression" })
+    }
+
+    /** Asked for while an ad plays, a break waits its turn rather than cutting in. */
+    @Test
+    fun aBreakInsertedDuringAnAdWaitsForItToEnd() {
+        val session = session(mapOf(TAG to inLine("a1")))
+        start(session)
+        runUntil { session.state.value == VastAdState.Playing }
+
+        session.insertBreak(VastAdsLoader.adTagUriForResponse(inLine("m1")))
+        session.insertBreak(VastAdsLoader.adTagUriForResponse(inLine("m2")))
+        assertEquals(2, session.pendingBreakCount.value)
+        TestPlayerRunHelper.runUntilPlaybackState(player, Player.STATE_ENDED)
+
+        assertEquals(
+            listOf(
+                "started a1 1/1", "finished a1 Completed", "all finished",
+                "started m1 1/1", "finished m1 Completed", "all finished",
+                "started m2 1/1", "finished m2 Completed", "all finished",
+            ),
+            events,
+        )
+        assertEquals(0, session.pendingBreakCount.value)
+    }
+
+    /** A break asked for that comes back empty costs the content nothing, and the next one still plays. */
+    @Test
+    fun anEmptyInsertedBreakIsReportedAndTheNextOneStillPlays() {
+        val session = session(mapOf(TAG to inLine("a1")))
+        start(session)
+        runUntil { session.state.value == VastAdState.Playing }
+
+        session.insertBreak(VastAdsLoader.adTagUriForResponse("""<VAST version="4.3"><Error><![CDATA[https://ads.test/no-ad]]></Error></VAST>"""))
+        session.insertBreak(VastAdsLoader.adTagUriForResponse(inLine("m2")))
+        TestPlayerRunHelper.runUntilPlaybackState(player, Player.STATE_ENDED)
+
+        assertTrue("failed null 303" in events, events.toString())
+        assertTrue("finished m2 Completed" in events, events.toString())
+        assertEquals(Player.STATE_ENDED, player.playbackState)
+    }
+
+    // MARK: - Picture in Picture
+
+    /** `PAUSES_AD`: nothing plays unwatched, and the pause is a real one, reported. */
+    @Test
+    fun underPausesAdTheWindowPausesTheAdAndReportsIt() {
+        val session = session(mapOf(TAG to inLine("a1")), VastConfiguration(pictureInPicture = VastPictureInPicturePolicy.PAUSES_AD))
+        start(session)
+        runUntil { session.state.value == VastAdState.Playing && "start" in reported }
+
+        session.notePictureInPicture(true)
+        runUntil { session.state.value == VastAdState.Paused }
+        session.notePictureInPicture(false)
+        runUntil { session.state.value == VastAdState.Playing }
+        TestPlayerRunHelper.runUntilPlaybackState(player, Player.STATE_ENDED)
+
+        assertEquals(1, reported.count { it == "pause" })
+        assertEquals(1, reported.count { it == "resume" })
+        assertTrue("complete" in reported)
+    }
+
+    /** `SUSPENDED`: the ad does not play in the window, the host is told not to open one, and nothing is reported as a pause. */
+    @Test
+    fun underSuspendedTheAdIsHeldInTheWindowAndTheHostIsToldNotToOpenIt() {
+        val session = session(mapOf(TAG to inLine("a1")), VastConfiguration(pictureInPicture = VastPictureInPicturePolicy.SUSPENDED))
+        assertTrue(session.permitsPictureInPicture.value, "before the break the window is the host's")
+        start(session)
+        runUntil { session.state.value == VastAdState.Playing && "start" in reported }
+        assertFalse(session.permitsPictureInPicture.value)
+
+        session.notePictureInPicture(true)
+        runUntil { !player.playWhenReady }
+        assertEquals(VastAdState.Playing, session.state.value)
+        session.notePictureInPicture(false)
+        runUntil { player.playWhenReady }
+        TestPlayerRunHelper.runUntilPlaybackState(player, Player.STATE_ENDED)
+
+        assertTrue("pause" !in reported && "resume" !in reported, reported.toString())
+        assertTrue(session.permitsPictureInPicture.value, "the window was not given back after the break")
+    }
+
+    /** `ALLOWED`: the ad plays in the window, and the cost is said out loud when the skip control comes due. */
+    @Test
+    fun underAllowedASkipDueInTheWindowIsReported() {
+        val session = session(mapOf(TAG to inLine("s1", skipOffset = "00:00:02")))
+        start(session)
+        runUntil { session.state.value == VastAdState.Playing }
+        session.notePictureInPicture(true)
+        runUntil { session.canSkip.value }
+
+        assertTrue(unavailable.any { "Picture in Picture" in it }, unavailable.toString())
+        assertTrue(player.playWhenReady, "ALLOWED let the ad play on")
+    }
+
+    // MARK: - System media controls
+
+    /**
+     * The notification and the lock screen drive the same player. During the
+     * break they cannot skip to the next item or change speed — the controls are
+     * gone, and the calls are refused — and they name the ad; afterwards the
+     * host's own answers come back.
+     */
+    @Test
+    fun theSystemControlsCannotLeaveTheAdAndNameIt() {
+        val session = session(mapOf(TAG to inLine("a1")))
+        val controls = session.forMediaSession(player)
+        val heard = mutableListOf<String>()
+        controls.addListener(object : Player.Listener {
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                heard += "title ${mediaMetadata.title}"
+            }
+
+            override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
+                heard += "next ${availableCommands.contains(Player.COMMAND_SEEK_TO_NEXT)}"
+            }
+        })
+        start(session)
+        runUntil { session.state.value == VastAdState.Playing && player.isPlayingAd }
+
+        assertFalse(controls.isCommandAvailable(Player.COMMAND_SEEK_TO_NEXT))
+        assertFalse(controls.availableCommands.contains(Player.COMMAND_SET_SPEED_AND_PITCH))
+        assertEquals("Advertisement", controls.mediaMetadata.title.toString())
+        controls.setPlaybackSpeed(2f)
+        controls.seekToNext()
+        assertEquals(1f, player.playbackParameters.speed)
+        assertTrue(player.isPlayingAd, "a controller's next skipped the ad")
+
+        TestPlayerRunHelper.runUntilPlaybackState(player, Player.STATE_ENDED)
+        assertTrue(controls.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH), "the host's speed control was not given back")
+        assertTrue(controls.mediaMetadata.title?.toString() != "Advertisement")
+        assertTrue("title Advertisement" in heard, heard.toString())
+        assertTrue("next false" in heard, heard.toString())
     }
 
     // MARK: - Speed

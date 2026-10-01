@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     // Whether the app is on screen, which decides whether an ad may play.
     implementation(libs.lifecycle.process)
+    implementation(libs.androidx.core)
 
     // The JUnit flavour by name: AGP does not pick kotlin-test's variant the way
     // the Kotlin JVM plugin does.

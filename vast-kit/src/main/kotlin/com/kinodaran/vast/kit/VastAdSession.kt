@@ -1,10 +1,15 @@
 package com.kinodaran.vast.kit
 
 import android.content.Context
+import android.net.Uri
+import androidx.core.app.OnPictureInPictureModeChangedProvider
+import androidx.core.app.PictureInPictureModeChangedInfo
+import androidx.core.util.Consumer
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.media3.common.Player
 import com.kinodaran.vast.core.VastAd
 import com.kinodaran.vast.core.VastBeacon
 import com.kinodaran.vast.core.VastError
@@ -26,6 +31,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -74,7 +82,11 @@ public class VastAdSession internal constructor(
         val isTelevision: Boolean = false,
         /** Whether the app is on screen. `null` in a test that does not care. */
         val appLifecycle: Lifecycle? = null,
+        /** The media controls' name for an ad with no `<AdTitle>`, in the device's language. */
+        val nowPlayingTitle: String = "Advertisement",
     ) {
+        fun isAppVisible(): Boolean = appLifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) ?: true
+
         companion object {
             fun of(context: Context, configuration: VastConfiguration): Environment {
                 val application = context.applicationContext
@@ -90,6 +102,7 @@ public class VastAdSession internal constructor(
                     uptimeSeconds = { android.os.SystemClock.elapsedRealtime() / 1000.0 },
                     isTelevision = application.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK),
                     appLifecycle = ProcessLifecycleOwner.get().lifecycle,
+                    nowPlayingTitle = application.getString(R.string.vast_nowplaying_title),
                 )
             }
         }
@@ -147,11 +160,7 @@ public class VastAdSession internal constructor(
      * ad the viewer can get past: VAST defines no attribute that would permit
      * seeking inside a linear creative.
      */
-    public val permitsPlaybackControls: Boolean
-        get() = when (mutableState.value) {
-            VastAdState.Loading, VastAdState.Playing, VastAdState.Paused -> false
-            VastAdState.Idle, is VastAdState.Finished -> true
-        }
+    public val permitsPlaybackControls: Boolean get() = mutableState.value.isOutsideBreak
 
     public var listener: VastAdSessionListener? = null
 
@@ -200,10 +209,18 @@ public class VastAdSession internal constructor(
     private val compliance = VastCompliance(this)
 
     /**
-     * True while the ad is held because the app left the screen, as distinct from
-     * a pause anyone chose — so it is neither reported nor shown as one.
+     * Why the ad is being held, as distinct from a pause anyone chose — so it is
+     * neither reported nor shown as one. Two can overlap: the app leaving the
+     * screen while the ad is held for the Picture in Picture window, say.
      */
-    private var suspendedBySystem = false
+    private val holds = mutableSetOf<Hold>()
+
+    /** Whether the session paused the player for a hold, and so owes it a restart. */
+    private var heldPlayback = false
+
+    private val suspendedBySystem: Boolean get() = heldPlayback
+
+    private enum class Hold { OFF_SCREEN, PICTURE_IN_PICTURE }
 
     /**
      * An ad nobody can see must not go on playing. AVFoundation stops decoding
@@ -224,16 +241,75 @@ public class VastAdSession internal constructor(
     }
 
     internal fun noteAppVisible(visible: Boolean) {
+        if (visible) release(Hold.OFF_SCREEN) else hold(Hold.OFF_SCREEN)
+    }
+
+    private fun hold(reason: Hold) {
         val slot = activeSlot ?: return
         if (slot.finished) return
+        holds += reason
         val player = breakPlayer ?: return
-        if (!visible) {
-            if (mutableState.value != VastAdState.Playing || !player.wantsPlayback) return
-            suspendedBySystem = true
-            player.pause()
-        } else if (suspendedBySystem) {
-            suspendedBySystem = false
-            player.play()
+        if (heldPlayback || mutableState.value != VastAdState.Playing || !player.wantsPlayback) return
+        heldPlayback = true
+        player.pause()
+    }
+
+    private fun release(reason: Hold) {
+        holds -= reason
+        if (holds.isNotEmpty() || !heldPlayback) return
+        heldPlayback = false
+        breakPlayer?.play()
+    }
+
+    // MARK: - Picture in Picture
+
+    private val mutableInPictureInPicture = MutableStateFlow(false)
+
+    /**
+     * Whether the activity is in the Picture in Picture window, as the host
+     * reported it — through [observePictureInPicture] or [notePictureInPicture].
+     * The SDK has no other way to know, and does not guess.
+     */
+    public val isInPictureInPicture: StateFlow<Boolean> = mutableInPictureInPicture.asStateFlow()
+
+    /**
+     * Whether the host's own way into Picture in Picture should be offered right
+     * now — its button, and `setAutoEnterEnabled`. False while a break runs under
+     * [VastPictureInPicturePolicy.SUSPENDED], true the rest of the time.
+     */
+    public val permitsPictureInPicture: StateFlow<Boolean> = mutableState
+        .map { state -> configuration.pictureInPicture != VastPictureInPicturePolicy.SUSPENDED || state.isOutsideBreak }
+        .stateIn(scope, SharingStarted.Eagerly, true)
+
+    /**
+     * Keeps [isInPictureInPicture] current from the activity's own callbacks — any
+     * `ComponentActivity` provides them. Close the result when the screen goes.
+     */
+    public fun observePictureInPicture(activity: OnPictureInPictureModeChangedProvider): AutoCloseable {
+        val listener = Consumer<PictureInPictureModeChangedInfo> { notePictureInPicture(it.isInPictureInPictureMode) }
+        activity.addOnPictureInPictureModeChangedListener(listener)
+        return AutoCloseable { activity.removeOnPictureInPictureModeChangedListener(listener) }
+    }
+
+    /** The activity entered or left Picture in Picture. For a host that tracks it itself. */
+    public fun notePictureInPicture(isActive: Boolean) {
+        if (mutableInPictureInPicture.value == isActive) return
+        mutableInPictureInPicture.value = isActive
+        listener?.onPictureInPictureChanged(isActive)
+        applyPictureInPicturePolicy()
+    }
+
+    /**
+     * Outside a break there is no ad to protect and no policy to apply: the window
+     * is the host's own. Asked again when a creative starts, because a window that
+     * was already open raises no callback of its own.
+     */
+    private fun applyPictureInPicturePolicy() {
+        val active = mutableInPictureInPicture.value
+        when (configuration.pictureInPicture) {
+            VastPictureInPicturePolicy.ALLOWED -> if (active) activeSlot?.let { compliance.reportPictureInPictureUnreachableUi(it.ad) }
+            VastPictureInPicturePolicy.PAUSES_AD -> if (active) pause() else resume()
+            VastPictureInPicturePolicy.SUSPENDED -> if (active) hold(Hold.PICTURE_IN_PICTURE) else release(Hold.PICTURE_IN_PICTURE)
         }
     }
 
@@ -254,7 +330,7 @@ public class VastAdSession internal constructor(
         slot.skipped = true
         send(slot.engine.userDidSkip(), slot)
         endSlot(slot)
-        breakPlayer?.skip(slot.index)
+        breakPlayer?.skip(slot)
     }
 
     /**
@@ -327,6 +403,50 @@ public class VastAdSession internal constructor(
         compliance.noteSkipControl(widthPixels / density, heightPixels / density)
     }
 
+    /**
+     * The player to give the host's `MediaSession` instead of the player itself,
+     * so the notification, the lock screen and a headset cannot skip or speed up
+     * the creative, and say what is playing while it does:
+     *
+     * ```kotlin
+     * val mediaSession = MediaSession.Builder(context, session.forMediaSession(player)).build()
+     * ```
+     *
+     * What it shows and locks is [VastConfiguration.nowPlaying].
+     */
+    public fun forMediaSession(player: Player): Player =
+        VastMediaSessionPlayer(player, this, configuration.nowPlaying, environment.nowPlayingTitle)
+
+    internal fun launchOnMain(block: suspend CoroutineScope.() -> Unit): Job = scope.launch(block = block)
+
+    // MARK: - Breaks on demand
+
+    private val mutablePendingBreaks = MutableStateFlow(0)
+
+    /** Breaks asked for with [insertBreak] that are waiting for the one before them. */
+    public val pendingBreakCount: StateFlow<Int> = mutablePendingBreaks.asStateFlow()
+
+    /**
+     * Plays a break during the content: right away when the content is what is
+     * playing, and after the break on screen when it is not. Several asked for at
+     * once play one after another, in the order they were asked for.
+     *
+     * The break goes into the content's own timeline at the playhead, so the
+     * content stops where it was and resumes from there, and
+     * every rule a pre-roll keeps — skip, tracking, the media controls, the
+     * window — holds for it the same way.
+     *
+     * @param adTag an ad server URL, or a response in hand from
+     *   [VastAdsLoader.adTagUriForResponse].
+     */
+    public fun insertBreak(adTag: Uri) {
+        adsLoader.insertBreak(adTag)
+    }
+
+    internal fun notePendingBreaks(count: Int) {
+        mutablePendingBreaks.value = count
+    }
+
     /** Ends the session: the break in progress, the player listener, and every coroutine. */
     public fun release() {
         stopTicking()
@@ -347,8 +467,11 @@ public class VastAdSession internal constructor(
      * [onResolved] with the planned slots — empty when nothing will play — on the
      * main thread.
      */
-    internal fun resolve(tag: VastAdTag, onResolved: (List<VastAdSlot>) -> Unit): Job = scope.launch {
-        mutableState.value = VastAdState.Loading
+    internal fun resolve(tag: VastAdTag, blocking: Boolean, onResolved: (List<VastAdSlot>) -> Unit): Job = scope.launch {
+        // A pre-roll holds the content until it resolves, so the session is loading.
+        // A break asked for during the content is not: the content plays on while
+        // its response comes back, and nothing should look as though it stopped.
+        if (blocking) mutableState.value = VastAdState.Loading
         transactionId = UUID.randomUUID().toString()
         val ads = try {
             withResolutionBudget {
@@ -361,18 +484,18 @@ public class VastAdSession internal constructor(
             // The wrappers traversed are owed an error request, sent without
             // waiting: the content is waiting on this break.
             send(failure.beacons, null)
-            failBreak(failure.error)
+            failBreak(failure.error, blocking)
             onResolved(emptyList())
             return@launch
         } catch (_: TimeoutCancellationException) {
             // No beacons: only the chain knows which URIs are owed, and cutting it
             // off from outside is exactly the case where it cannot say.
-            failBreak(VastError.WRAPPER_TIMEOUT)
+            failBreak(VastError.WRAPPER_TIMEOUT, blocking)
             onResolved(emptyList())
             return@launch
         }
         if (ads.isEmpty()) {
-            failBreak(VastError.NO_VAST_RESPONSE_AFTER_WRAPPERS)
+            failBreak(VastError.NO_VAST_RESPONSE_AFTER_WRAPPERS, blocking)
             onResolved(emptyList())
             return@launch
         }
@@ -384,7 +507,7 @@ public class VastAdSession internal constructor(
             plan(ad, slots.size)?.let { slots += it } ?: substitute(slots.size)?.let { slots += it }
         }
         if (slots.isEmpty()) {
-            finishBreak()
+            if (blocking) finishBreak()
             onResolved(emptyList())
             return@launch
         }
@@ -442,13 +565,20 @@ public class VastAdSession internal constructor(
 
     /** The tag could not even be read, so there is nothing to resolve and nobody's `<Error>` to tell. */
     internal fun resolveFailedBeforeLoading(error: VastError) {
-        failBreak(error)
+        failBreak(error, blocking = true)
         finishBreak()
     }
 
-    private fun failBreak(error: VastError) {
-        lastOutcome = VastAdOutcome.Failed(error)
-        mutableState.value = VastAdState.Finished(lastOutcome)
+    /**
+     * The response produced no ad. A pre-roll that fails finishes the session's
+     * state; a break asked for during the content leaves the state as the content
+     * has it — only the listener hears, because nothing on screen changed.
+     */
+    private fun failBreak(error: VastError, blocking: Boolean) {
+        if (blocking) {
+            lastOutcome = VastAdOutcome.Failed(error)
+            mutableState.value = VastAdState.Finished(lastOutcome)
+        }
         listener?.onAdFailed(error, null)
     }
 
@@ -501,6 +631,8 @@ public class VastAdSession internal constructor(
         // impression it is being asked to attest to.
         measurement?.begin(VastMeasurementContext(slot.ad, adView = null))
         listener?.onAdStarted(slot.ad, mutableAdPosition.value)
+        if (!environment.isAppVisible()) hold(Hold.OFF_SCREEN)
+        if (mutableInPictureInPicture.value) applyPictureInPicturePolicy()
 
         val activeClock = configuration.clock ?: clock
         slot.clock = activeClock
@@ -571,7 +703,7 @@ public class VastAdSession internal constructor(
      */
     internal fun notePlayback(wantsPlayback: Boolean) {
         val slot = activeSlot ?: return
-        if (slot.finished || suspendedBySystem) return
+        if (slot.finished || heldPlayback) return
         if (wantsPlayback) {
             if (mutableState.value != VastAdState.Paused) return
             send(slot.engine.report(VastTrackingEvent.RESUME), slot)
@@ -592,13 +724,16 @@ public class VastAdSession internal constructor(
         send(beacons, slot)
         if (beacons.any { it.kind is VastBeacon.Kind.Error }) listener?.onAdFailed(VastError.MEDIA_FILE_TIMEOUT, slot.ad)
         endSlot(slot)
-        breakPlayer?.abandon(slot.index)
+        breakPlayer?.abandon(slot)
     }
 
     private fun endSlot(slot: VastAdSlot) {
         if (slot.finished) return
         stopTicking()
-        suspendedBySystem = false
+        // A hold belongs to the creative it was put on: the next one starts clean
+        // and is held again only if the reason still stands.
+        holds.clear()
+        heldPlayback = false
         slot.finished = true
         val outcome = outcomeFor(slot)
         slot.outcome = outcome
@@ -818,6 +953,9 @@ internal class VastAdSlot(
     var finished = false
     var outcome: VastAdOutcome? = null
     var clock: VastClock? = null
+
+    /** Where the slot's ad group sits in the content period, set when it is given one. */
+    var groupTimeUs: Long = 0
 }
 
 /** What the session needs from whatever is actually playing the break. */
@@ -825,10 +963,10 @@ internal interface VastBreakPlayer {
     /** Whether the player is trying to play — false while paused by anyone. */
     val wantsPlayback: Boolean
 
-    fun skip(slot: Int)
+    fun skip(slot: VastAdSlot)
 
     /** The creative stalled for good; move on without it. */
-    fun abandon(slot: Int)
+    fun abandon(slot: VastAdSlot)
 
     fun pause()
 
@@ -836,3 +974,10 @@ internal interface VastBreakPlayer {
 
     fun onAdClicked()
 }
+
+/** `.loading` counts as inside: the break takes the controls a moment early, which is the safe direction. */
+internal val VastAdState.isOutsideBreak: Boolean
+    get() = when (this) {
+        VastAdState.Loading, VastAdState.Playing, VastAdState.Paused -> false
+        VastAdState.Idle, is VastAdState.Finished -> true
+    }

@@ -46,13 +46,15 @@ import java.net.URLDecoder
  * )
  * ```
  *
- * The break is a pre-roll: the response is resolved when the content is
- * prepared, the content waits for it — no longer than the resolution budget —
- * and every playable ad of the pod is one ad in a single ad group at the start of
- * the content. Media3 then owns playback, buffering and the return to content;
- * this class reports what it sees to the [VastAdSession], which owns tracking.
+ * The tag in the `AdsConfiguration` is a pre-roll: it is resolved when the
+ * content is prepared, the content waits for it — no longer than the resolution
+ * budget — and every playable ad of the pod is one ad in an ad group at the start
+ * of the content. More breaks can be asked for while the content plays with
+ * [VastAdSession.insertBreak]; each becomes an ad group at the playhead. Media3
+ * then owns playback, buffering and the return to content; this class reports
+ * what it sees to the [VastAdSession], which owns tracking.
  *
- * One break at a time, as a session is one break. Main thread only.
+ * One break plays at a time. Main thread only.
  */
 @OptIn(UnstableApi::class)
 public class VastAdsLoader internal constructor(private val session: VastAdSession) : AdsLoader {
@@ -61,17 +63,38 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     private var player: Player? = null
     private var source: AdsMediaSource? = null
     private var eventListener: AdsLoader.EventListener? = null
-    private var dataSpec: DataSpec? = null
     private var adsId: Any? = null
     private var adPlaybackState: AdPlaybackState? = null
     private var resolution: Job? = null
-    private val slots = mutableListOf<VastAdSlot>()
-    private var playingIndex = C.INDEX_UNSET
-    private var breakOver = false
     private val period = Timeline.Period()
 
+    /**
+     * Every break given a place in the timeline, by the position of its ad group
+     * in the content period. Keyed by position rather than by group index because
+     * an index moves when a break is inserted before it; a position does not.
+     */
+    private val breaks = mutableMapOf<Long, MutableList<VastAdSlot>>()
+
+    /** Breaks delivered to Media3 and not yet over, by the same key. */
+    private val openBreaks = mutableSetOf<Long>()
+
+    /** The creative on screen, if the player is on one of ours. */
+    private var playing: VastAdSlot? = null
+
+    /** Breaks asked for while another was resolving or playing, in the order they were asked for. */
+    private val pending = ArrayDeque<VastAdTag>()
+
+    /**
+     * Where an inserted break was put, until the player's timeline has it and the
+     * playhead can be sent through it.
+     */
+    private var midrollAwaitingSeekUs: Long? = null
+
     private val playerListener = object : Player.Listener {
-        override fun onTimelineChanged(timeline: Timeline, reason: Int) = sync(naturally = false)
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            sync(naturally = false)
+            enterInsertedBreakIfReady()
+        }
 
         override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) =
             sync(naturally = reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION)
@@ -85,20 +108,20 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
          * Media3 already refuses seeks while an ad plays; speed it leaves to us.
          */
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-            if (playingIndex != C.INDEX_UNSET && playbackParameters.speed != 1f) player?.setPlaybackSpeed(1f)
+            if (playing != null && playbackParameters.speed != 1f) player?.setPlaybackSpeed(1f)
         }
     }
 
-    /** The content's own speed, held while the break plays at 1× and given back after it. */
+    /** The content's own speed, held while a break plays at 1× and given back after it. */
     private var hostSpeed: Float? = null
 
     private val breakPlayer = object : VastBreakPlayer {
         override val wantsPlayback: Boolean
             get() = player?.let { it.playWhenReady && it.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE } ?: false
 
-        override fun skip(slot: Int) = update { it.withSkippedAd(AD_GROUP, slot) }
+        override fun skip(slot: VastAdSlot) = settle(slot) { state, group -> state.withSkippedAd(group, slot.index) }
 
-        override fun abandon(slot: Int) = update { it.withSkippedAd(AD_GROUP, slot) }
+        override fun abandon(slot: VastAdSlot) = settle(slot) { state, group -> state.withSkippedAd(group, slot.index) }
 
         override fun pause() {
             player?.pause()
@@ -119,7 +142,7 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         nextPlayer = player
     }
 
-    /** Any content type: the break is a pre-roll and does not depend on how the content is delivered. */
+    /** Any content type: a break does not depend on how the content is delivered. */
     override fun setSupportedContentTypes(vararg contentTypes: Int) {}
 
     override fun start(
@@ -137,7 +160,7 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         attach(player, adsMediaSource, eventListener)
 
         // The same content prepared again — a player rebuilt after a configuration
-        // change, say. The break already resolved is the one to show, from where it was.
+        // change, say. The breaks already resolved are the ones to show, from where they were.
         val known = adPlaybackState
         if (adsId == this.adsId && known != null) {
             eventListener.onAdPlaybackState(known)
@@ -147,13 +170,12 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
 
         reset()
         this.adsId = adsId
-        this.dataSpec = adTagDataSpec
         val tag = tagFor(adTagDataSpec.uri) ?: run {
             session.resolveFailedBeforeLoading(VastError.WRAPPER_GENERAL)
             deliver(AdPlaybackState(adsId))
             return
         }
-        resolution = session.resolve(tag) { planned -> onResolved(adsId, planned) }
+        resolution = session.resolve(tag, blocking = true) { planned -> onPrerollResolved(adsId, planned) }
     }
 
     override fun stop(adsMediaSource: AdsMediaSource, eventListener: AdsLoader.EventListener) {
@@ -166,8 +188,6 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     }
 
     override fun release() {
-        resolution?.cancel()
-        resolution = null
         player?.removeListener(playerListener)
         session.attach(null)
         player = null
@@ -178,30 +198,134 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     }
 
     override fun handlePrepareComplete(adsMediaSource: AdsMediaSource, adGroupIndex: Int, adIndexInAdGroup: Int) {
-        if (adGroupIndex != AD_GROUP) return
-        slots.getOrNull(adIndexInAdGroup)?.let(session::slotPrepared)
+        slotAt(adGroupIndex, adIndexInAdGroup)?.let(session::slotPrepared)
     }
 
     override fun handlePrepareError(adsMediaSource: AdsMediaSource, adGroupIndex: Int, adIndexInAdGroup: Int, exception: IOException) {
-        if (adGroupIndex != AD_GROUP) return
-        val slot = slots.getOrNull(adIndexInAdGroup) ?: return
+        val slot = slotAt(adGroupIndex, adIndexInAdGroup) ?: return
+        val slots = breaks[slot.groupTimeUs] ?: return
         session.slotFailed(slot, errorFor(exception))
         update { state ->
-            var next = state.withAdLoadError(AD_GROUP, adIndexInAdGroup)
+            val group = groupIndexOf(state, slot.groupTimeUs) ?: return@update state
+            var next = state.withAdLoadError(group, adIndexInAdGroup)
             // §3.3.1: an unplayed stand-alone ad takes the failed one's turn. Media3
             // cannot put a new creative where one has already been tried, so the
             // substitute joins the end of the group instead — the break still has
             // as many ads as the pod asked for.
             session.substitute(slots.size)?.let { spare ->
+                spare.groupTimeUs = slot.groupTimeUs
                 slots += spare
-                next = next.withAdCount(AD_GROUP, slots.size).withAvailableAdMediaItem(AD_GROUP, spare.index, mediaItem(spare))
+                next = next.withAdCount(group, slots.size).withAvailableAdMediaItem(group, spare.index, mediaItem(spare))
             }
             next
         }
         sync(naturally = false)
     }
 
-    // MARK: - The break
+    // MARK: - Breaks on demand
+
+    /**
+     * Plays a break as soon as the content allows it: right away when the content
+     * is what is playing, and after the break on screen when it is not. Several
+     * asked for at once play one after another, in the order they were asked for.
+     *
+     * The break is put into the content's own timeline at the playhead, so the
+     * content stops where it was and resumes from there. Content the player
+     * cannot seek in — a live stream without a window — holds an inserted break
+     * until the viewer next seeks, which is Media3's rule rather than ours.
+     */
+    internal fun insertBreak(adTag: Uri) {
+        val tag = tagFor(adTag) ?: return VastLog.warning("insertBreak: not an ad tag: $adTag")
+        pending.addLast(tag)
+        session.notePendingBreaks(pending.size)
+        startNextPending()
+    }
+
+    private fun startNextPending() {
+        val player = player ?: return
+        val adsId = adsId ?: return
+        // Not before the content has its timeline, not while another break is
+        // resolving, and not on top of one that is playing.
+        //
+        // `isActive` rather than a null check: a response that resolves at once can
+        // finish inside `resolve` itself, before its job is ever assigned here, and
+        // a completed job left in the field would hold the queue shut for good.
+        if (adPlaybackState == null || resolution?.isActive == true || openBreaks.isNotEmpty() || player.isPlayingAd) return
+        val tag = pending.removeFirstOrNull() ?: return
+        session.notePendingBreaks(pending.size)
+        resolution = session.resolve(tag, blocking = false) { planned -> onMidrollResolved(adsId, planned) }
+    }
+
+    // MARK: - Resolution
+
+    private fun onPrerollResolved(adsId: Any, planned: List<VastAdSlot>) {
+        if (adsId != this.adsId) return
+        resolution = null
+        if (planned.isEmpty()) {
+            // No ad group at all: the content plays as though it had no break.
+            deliver(AdPlaybackState(adsId))
+            startNextPending()
+            return
+        }
+        deliver(withBreak(AdPlaybackState(adsId), 0L, planned))
+    }
+
+    private fun onMidrollResolved(adsId: Any, planned: List<VastAdSlot>) {
+        if (adsId != this.adsId) return
+        resolution = null
+        val player = player
+        val state = adPlaybackState
+        if (planned.isEmpty() || player == null || state == null) {
+            startNextPending()
+            return
+        }
+        // At the playhead itself, not ahead of it. Media3 does not interrupt content
+        // for an ad group that appears where the content already is — it holds the
+        // change until the next seek, so as not to cut a viewer off mid-sentence —
+        // and that is exactly what a break asked for now has to do. So the break
+        // goes in here, and once the player's timeline has it, the playhead is sent
+        // back to where it is: a seek plays the unplayed group before it first, and
+        // the content resumes from that same position afterwards.
+        //
+        // Strictly after every break already there: the content resumes from the
+        // very position the last break sat at, and two groups at one position would
+        // be one break as far as Media3 is concerned. A millisecond later is enough,
+        // and whole milliseconds are what a seek can name.
+        val playhead = contentPeriodPositionUs(player)
+        val latest = (0 until state.adGroupCount).maxOfOrNull { state.getAdGroup(it).timeUs } ?: C.TIME_UNSET
+        val positionUs = if (latest == C.TIME_UNSET || playhead > latest) playhead else (latest / 1000 + 1) * 1000
+        deliver(withBreak(state, positionUs, planned))
+        midrollAwaitingSeekUs = positionUs
+        enterInsertedBreakIfReady()
+    }
+
+    private fun enterInsertedBreakIfReady() {
+        val positionUs = midrollAwaitingSeekUs ?: return
+        val player = player ?: return
+        if (player.isPlayingAd) return
+        val timeline = player.currentTimeline
+        if (timeline.isEmpty) return
+        val known = timeline.getPeriod(player.currentPeriodIndex, period).adPlaybackState
+        if ((0 until known.adGroupCount).none { known.getAdGroup(it).timeUs == positionUs }) return
+        midrollAwaitingSeekUs = null
+        // The group's own position, in window time, which is what a seek is given.
+        player.seekTo(positionUs / 1000 + period.positionInWindowMs)
+    }
+
+    /** A new ad group at [positionUs] holding [slots], recorded as an open break. */
+    private fun withBreak(state: AdPlaybackState, positionUs: Long, slots: List<VastAdSlot>): AdPlaybackState {
+        val group = (0 until state.adGroupCount).count { state.getAdGroup(it).timeUs < positionUs }
+        var next = state.withNewAdGroup(group, positionUs).withAdCount(group, slots.size)
+        for (slot in slots) {
+            slot.groupTimeUs = positionUs
+            next = next.withAvailableAdMediaItem(group, slot.index, mediaItem(slot))
+        }
+        breaks[positionUs] = slots.toMutableList()
+        openBreaks += positionUs
+        return next
+    }
+
+    // MARK: - The break in progress
 
     private fun attach(player: Player, adsMediaSource: AdsMediaSource, eventListener: AdsLoader.EventListener) {
         this.player?.removeListener(playerListener)
@@ -217,32 +341,22 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         resolution = null
         adsId = null
         adPlaybackState = null
-        dataSpec = null
-        slots.clear()
-        playingIndex = C.INDEX_UNSET
-        breakOver = false
+        breaks.clear()
+        openBreaks.clear()
+        playing = null
         hostSpeed = null
-    }
-
-    private fun onResolved(adsId: Any, planned: List<VastAdSlot>) {
-        if (adsId != this.adsId) return
-        resolution = null
-        slots.clear()
-        slots += planned
-        if (planned.isEmpty()) {
-            breakOver = true
-            // No ad group at all: the content plays as though it had no break.
-            deliver(AdPlaybackState(adsId))
-            return
-        }
-        var state = AdPlaybackState(adsId, 0L).withAdCount(AD_GROUP, planned.size)
-        for (slot in planned) state = state.withAvailableAdMediaItem(AD_GROUP, slot.index, mediaItem(slot))
-        deliver(state)
+        midrollAwaitingSeekUs = null
+        pending.clear()
+        session.notePendingBreaks(0)
     }
 
     private fun update(change: (AdPlaybackState) -> AdPlaybackState) {
         val state = adPlaybackState ?: return
         deliver(change(state))
+    }
+
+    private fun settle(slot: VastAdSlot, change: (AdPlaybackState, Int) -> AdPlaybackState) = update { state ->
+        groupIndexOf(state, slot.groupTimeUs)?.let { change(state, it) } ?: state
     }
 
     private fun deliver(state: AdPlaybackState) {
@@ -258,34 +372,39 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     private fun sync(naturally: Boolean) {
         val player = player ?: return
         val state = adPlaybackState ?: return
-        val ours = player.isPlayingAd && player.currentAdGroupIndex == AD_GROUP && isOurPeriod(player)
-        val index = if (ours) player.currentAdIndexInAdGroup else C.INDEX_UNSET
+        val current = if (player.isPlayingAd && isOurPeriod(player)) slotAt(player.currentAdGroupIndex, player.currentAdIndexInAdGroup) else null
 
-        if (playingIndex != C.INDEX_UNSET && index != playingIndex) {
-            val left = slots[playingIndex]
+        val left = playing
+        if (left != null && left !== current) {
             session.slotLeft(left, naturally)
             // Played, unless it was already settled some other way — skipped,
             // abandoned, or failed.
-            if (state.getAdGroup(AD_GROUP).states.getOrNull(left.index) == AdPlaybackState.AD_STATE_AVAILABLE) {
-                deliver(state.withPlayedAd(AD_GROUP, left.index))
+            val group = groupIndexOf(state, left.groupTimeUs)
+            if (group != null && state.getAdGroup(group).states.getOrNull(left.index) == AdPlaybackState.AD_STATE_AVAILABLE) {
+                deliver(state.withPlayedAd(group, left.index))
             }
         }
-        if (index != C.INDEX_UNSET && index != playingIndex) {
+        if (current != null && current !== playing) {
             if (hostSpeed == null) {
                 hostSpeed = player.playbackParameters.speed
                 if (hostSpeed != 1f) player.setPlaybackSpeed(1f)
             }
-            val slot = slots.getOrNull(index)
-            if (slot != null) session.slotStarted(slot, slots.size, VastPlayerClock(player, slot, AD_GROUP, ::isOurPeriod, clockOf(player)))
+            val total = breaks[current.groupTimeUs]?.size ?: 1
+            session.slotStarted(current, total, VastPlayerClock(player, { slotAt(it) === current }, clockOf(player)))
         }
-        playingIndex = index
+        playing = current
 
-        if (!ours && !breakOver && slots.isNotEmpty() && isSettled()) {
-            breakOver = true
+        // A break is over when every ad in it is settled and the player is not on
+        // one of them — which covers a break whose every ad failed to load and that
+        // the player therefore never entered.
+        for (positionUs in openBreaks.toList()) {
+            if (current?.groupTimeUs == positionUs || !isSettled(positionUs)) continue
+            openBreaks -= positionUs
             hostSpeed?.let { if (it != 1f) player.setPlaybackSpeed(it) }
             hostSpeed = null
             session.breakEnded()
         }
+        if (current == null) startNextPending()
     }
 
     /** ExoPlayer's own clock where there is one — a fake one, in tests — and the system's otherwise. */
@@ -297,15 +416,39 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         return timeline.getPeriod(player.currentPeriodIndex, period).adsId == adsId
     }
 
-    /** Every ad in the group played, skipped or failed: nothing is left for the break to show. */
-    private fun isSettled(): Boolean {
-        val group = adPlaybackState?.getAdGroup(AD_GROUP) ?: return true
+    /** The slot the player is on right now, if it is one of ours. */
+    private fun slotAt(player: Player): VastAdSlot? =
+        if (player.isPlayingAd && isOurPeriod(player)) slotAt(player.currentAdGroupIndex, player.currentAdIndexInAdGroup) else null
+
+    private fun slotAt(adGroupIndex: Int, adIndexInAdGroup: Int): VastAdSlot? {
+        val state = adPlaybackState ?: return null
+        if (adGroupIndex !in 0 until state.adGroupCount) return null
+        return breaks[state.getAdGroup(adGroupIndex).timeUs]?.getOrNull(adIndexInAdGroup)
+    }
+
+    private fun groupIndexOf(state: AdPlaybackState, positionUs: Long): Int? =
+        (0 until state.adGroupCount).firstOrNull { state.getAdGroup(it).timeUs == positionUs }
+
+    /** Every ad in the break played, skipped or failed: nothing is left for it to show. */
+    private fun isSettled(positionUs: Long): Boolean {
+        val state = adPlaybackState ?: return true
+        val group = groupIndexOf(state, positionUs)?.let(state::getAdGroup) ?: return true
         return group.states.take(group.count.coerceAtLeast(0)).none { it == AdPlaybackState.AD_STATE_AVAILABLE || it == AdPlaybackState.AD_STATE_UNAVAILABLE }
     }
 
-    public companion object {
-        private const val AD_GROUP = 0
+    /**
+     * The content playhead in period time, which is what an ad group's position
+     * is measured in. The two differ by the window's offset in its period, as they
+     * do for IMA.
+     */
+    private fun contentPeriodPositionUs(player: Player): Long {
+        val timeline = player.currentTimeline
+        val windowPositionMs = player.contentPosition
+        if (timeline.isEmpty) return windowPositionMs * 1000
+        return (windowPositionMs - timeline.getPeriod(player.currentPeriodIndex, period).positionInWindowMs) * 1000
+    }
 
+    public companion object {
         /**
          * An `AdsConfiguration` tag for a response already in hand, as a `data:`
          * URI. Wrappers inside it are still followed; a relative `VASTAdTagURI`

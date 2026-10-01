@@ -96,6 +96,7 @@ public fun VastAdSurface(
     val state by session.state.collectAsState()
     val ad by session.currentAd.collectAsState()
     val hiddenUi by session.isHiddenUi.collectAsState()
+    val inPictureInPicture by session.isInPictureInPicture.collectAsState()
     val density = LocalDensity.current.density
     val context = LocalContext.current
     val isTelevision = remember(context) { context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) }
@@ -121,7 +122,13 @@ public fun VastAdSurface(
         // where a transparent layer under a D-pad can never take focus — an inert
         // click path that looks present is worse than an absent one, because nobody
         // finds out. The session reports it instead.
-        if (!isTelevision && session.configuration.clickPresentation == VastClickPresentation.SURFACE && current.linear.clickThrough != null) {
+        //
+        // Nor in the Picture in Picture window, which shows the app but takes no
+        // touches: the badge and countdown stay, because the viewer is still owed
+        // being told it is an ad, and the controls go, because there they would
+        // only look reachable.
+        val interactive = !inPictureInPicture
+        if (interactive && !isTelevision && session.configuration.clickPresentation == VastClickPresentation.SURFACE && current.linear.clickThrough != null) {
             Box(
                 Modifier
                     .fillMaxSize()
@@ -141,7 +148,7 @@ public fun VastAdSurface(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 // Drawn only when the SDK owns the control. Under HOST the host draws
                 // it, and under UNSUPPORTED a skippable ad never reaches playback.
-                if (session.effectiveSkipPresentation == VastSkipPresentation.SDK && current.isSkippable) {
+                if (interactive && session.effectiveSkipPresentation == VastSkipPresentation.SDK && current.isSkippable) {
                     Skip(session, skipButton, density, isTelevision)
                 }
             }

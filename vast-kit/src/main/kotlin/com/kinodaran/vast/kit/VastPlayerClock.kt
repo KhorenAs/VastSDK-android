@@ -26,9 +26,8 @@ import kotlinx.coroutines.flow.callbackFlow
 @OptIn(UnstableApi::class)
 internal class VastPlayerClock(
     private val player: Player,
-    private val slot: VastAdSlot,
-    private val adGroupIndex: Int,
-    private val isOurPeriod: (Player) -> Boolean,
+    /** Whether the player is on this clock's creative right now. */
+    private val isOurs: (Player) -> Boolean,
     private val clock: Clock,
     /** 200 ms keeps quartile timing within a frame or two without waking the CPU on every frame. */
     private val intervalMillis: Long = 200,
@@ -59,8 +58,7 @@ internal class VastPlayerClock(
     }
 
     private fun tick(): VastTick {
-        val ours = player.isPlayingAd && player.currentAdGroupIndex == adGroupIndex &&
-            player.currentAdIndexInAdGroup == slot.index && isOurPeriod(player)
+        val ours = isOurs(player)
         val duration = player.duration
         return VastTick(
             adTime = if (ours) player.currentPosition / 1000.0 else 0.0,
