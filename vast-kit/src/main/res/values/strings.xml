@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The words the SDK's own ad UI puts on screen. Localised inside the library
+  rather than left to the host: every element of the surface is replaceable, so a
+  host can supply its own copy, but the default is what a host that configures
+  nothing gets — and an English skip control in an Armenian app is not a neutral
+  default. Same keys and wording as VastSDK-apple's Localizable.strings.
+-->
+<resources>
+    <!-- The badge shown while an ad is on screen, when the break holds one ad. -->
+    <string name="vast_ad_badge">Ad</string>
+    <!-- The same badge in a pod: position, then how many ads the break holds. -->
+    <string name="vast_ad_badge_pod">Ad %1$d/%2$d</string>
+    <!-- Time left in the creative. Kept short: it sits beside the badge. -->
+    <string name="vast_ad_countdown">%1$ds</string>
+    <!-- The skip control, once skipoffset has elapsed. -->
+    <string name="vast_skip_action">Skip Ad  ›</string>
+    <!-- The skip control before it unlocks: seconds remaining. -->
+    <string name="vast_skip_countdown">Skip in %1$d</string>
+    <!-- The media notification's name for an ad, when the response carried no AdTitle. -->
+    <string name="vast_nowplaying_title">Advertisement</string>
+</resources>
