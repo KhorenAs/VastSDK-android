@@ -1,8 +1,10 @@
 // The ad surface. Foundation only, no Material: the host's theme owns the look,
 // and a Material dependency here would pin the host's Material version.
+description = "The VAST ad surface for Jetpack Compose: badge, countdown, skip control and click-through."
+
 plugins {
     alias(libs.plugins.android.library)
-    `maven-publish`
+    alias(libs.plugins.vanniktech.publish)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.detekt)
 }
@@ -21,12 +23,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
-
     buildFeatures {
         compose = true
     }
@@ -42,13 +38,4 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
-}
-
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            artifactId = "vast-compose"
-            afterEvaluate { from(components["release"]) }
-        }
-    }
 }

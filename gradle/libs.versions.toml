@@ -19,6 +19,8 @@ androidxTestCore = "1.7.0"
 detekt = "2.0.0-alpha.6"
 # The demo's debug build only: what a closed screen leaves behind.
 leakcanary = "2.14"
+# Maven Central's Portal, signing, and the sources and javadoc jars it asks for.
+vanniktechPublish = "0.37.0"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -50,3 +52,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
+vanniktech-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechPublish" }

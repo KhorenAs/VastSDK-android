@@ -1,8 +1,10 @@
 // Session, Media3 playback, beacon delivery and lifecycle. No UI: the surface
 // lives in vast-compose and only draws the state this module publishes.
+description = "Plays VAST breaks in a Media3 player: the session, ad insertion, beacon delivery and lifecycle."
+
 plugins {
     alias(libs.plugins.android.library)
-    `maven-publish`
+    alias(libs.plugins.vanniktech.publish)
     alias(libs.plugins.detekt)
 }
 
@@ -24,12 +26,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
     }
 }
 
@@ -57,13 +53,4 @@ dependencies {
     testImplementation(libs.media3.test.utils)
     testImplementation(libs.media3.test.utils.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            artifactId = "vast-kit"
-            afterEvaluate { from(components["release"]) }
-        }
-    }
 }

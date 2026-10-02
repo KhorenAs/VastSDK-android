@@ -14,12 +14,10 @@ screen released to LeakCanary, and 20 open and close cycles leave nothing behind
 
 ## Blockers
 
-**1. Publishing.** The libraries publish to Maven local as
-`com.kinodaran.vast:vast-core|vast-kit|vast-compose:0.1.0`, with sources. Where
-they go for hosts is a decision, not a task: Maven Central needs a namespace and
-signing keys; JitPack builds from a GitHub tag with no setup but publishes under
-`com.github.KhorenAs`; GitHub Packages needs a token on every host. Tagging
-`v0.1.0` follows from that choice. (#24)
+**1. Maven Central.** A tag publishes to GitHub Packages and JitPack by itself.
+Maven Central also needs the `com.kinodaran` namespace verified on kinodaran.com,
+a signing key and four repository secrets — the owner's account, domain and keys,
+so the owner's steps. [PUBLISHING.md](PUBLISHING.md) lists them. (#24)
 
 **2. Real devices.** Emulators answer the logic. They do not answer what
 differs between manufacturers — background limits, audio focus, Picture in

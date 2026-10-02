@@ -3,16 +3,17 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // Pure logic, like VASTCore on Apple: no android.* and no player, so parsing and
 // tracking rules can never take a dependency on a live one, and the tests run
 // on the JVM in seconds.
+description = "VAST 4.3 parsing, wrapper chains, macros and tracking, in pure Kotlin."
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    `maven-publish`
+    alias(libs.plugins.vanniktech.publish)
     alias(libs.plugins.detekt)
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-    withSourcesJar()
 }
 
 kotlin {
@@ -32,13 +33,4 @@ dependencies {
     // The resolver is suspending; the tests drive it with runBlocking. The
     // library itself needs no coroutine runtime, only the language feature.
     testImplementation(libs.kotlinx.coroutines.core)
-}
-
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            artifactId = "vast-core"
-            from(components["java"])
-        }
-    }
 }

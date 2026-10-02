@@ -1,0 +1,7 @@
+# JitPack builds a tag the first time someone asks for it, and serves it as
+# com.github.KhorenAs.VastSDK-android:<module>:<tag>. The build reads JitPack's
+# JITPACK and VERSION variables to publish under those names.
+jdk:
+  - openjdk21
+install:
+  - ./gradlew publishToMavenLocal

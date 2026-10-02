@@ -23,10 +23,39 @@ vast-compose  the ad surface, in Compose
 demo          phone and TV app with the Apple demos' scenarios
 ```
 
+### Installing
+
+`vast-compose` brings `vast-kit` and `vast-core` with it. Each release is published
+to three places; take whichever suits the host.
+
+**Maven Central** — nothing to add but the dependency, once the first release is
+there ([PUBLISHING.md](PUBLISHING.md)):
+
 ```kotlin
-dependencies {
-    implementation("com.kinodaran.vast:vast-compose:0.1.0") // brings vast-kit and vast-core
+implementation("com.kinodaran.vast:vast-compose:0.1.0")
+```
+
+**GitHub Packages** — the same coordinates. GitHub asks for a token with
+`read:packages` even for a public package:
+
+```kotlin
+// settings.gradle.kts, in dependencyResolutionManagement.repositories
+maven("https://maven.pkg.github.com/KhorenAs/VastSDK-android") {
+    credentials {
+        username = providers.gradleProperty("gpr.user").get()
+        password = providers.gradleProperty("gpr.token").get()
+    }
 }
+```
+
+**JitPack** — no token, JitPack's names:
+
+```kotlin
+// settings.gradle.kts, in dependencyResolutionManagement.repositories
+maven("https://jitpack.io")
+
+// build.gradle.kts
+implementation("com.github.KhorenAs.VastSDK-android:vast-compose:v0.1.0")
 ```
 
 Requirements: Android 7.0 (API 24) · Media3 1.11 · Jetpack Compose · Kotlin 2.4.
