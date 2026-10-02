@@ -1,0 +1,48 @@
+# Only what differs from detekt's defaults, and why. Everything else is the
+# default, so a rule detekt adds in a new release is on here too.
+
+complexity:
+  # A VAST element per branch is the parser's shape, and the macro table's.
+  # Counting each simple `when` entry as a path calls a lookup table complex.
+  CyclomaticComplexMethod:
+    ignoreSimpleWhenEntries: true
+    ignoreAnnotated: ['Composable']
+  # A screen is one composable, read top to bottom.
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  # Composables take slots and a modifier by convention, and defaulted
+  # parameters are what Kotlin has instead of builders.
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
+    ignoreDefaultParameters: true
+  # A forwarding player overrides every callback it forwards; that is the job.
+  TooManyFunctions:
+    ignoreOverridden: true
+    ignorePrivate: true
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+
+style:
+  # Fixtures are whole VAST documents on a line; reading them wrapped is worse.
+  MaxLineLength:
+    maxLineLength: 140
+    excludes: ['**/test/**']
+  # VAST's error codes are the specification's numbers, and an enum entry
+  # already names them; a status range is HTTP's own; a conversion factor names
+  # itself; and a composable's dimensions and colours are its design.
+  MagicNumber:
+    ignoreEnums: true
+    ignoreRanges: true
+    ignoreAnnotated: ['Composable']
+    ignoreNumbers: ['-1', '0', '1', '2', '60', '100', '1000', '3600']
+    excludes: ['**/test/**']
+  # Early returns are how this code reads — Swift's `guard`, ported — and
+  # counting them pushes it toward nesting instead.
+  ReturnCount:
+    active: false
+  # A failure becomes a VAST error code, and each kind of failure has its own
+  # code: a throw per kind is the job, not a smell.
+  ThrowsCount:
+    max: 5

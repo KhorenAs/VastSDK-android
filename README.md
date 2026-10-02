@@ -187,10 +187,16 @@ device, what is stored, and what to put in the Data safety form.
 ## Building
 
 ```bash
-./gradlew build      # every module, unit tests and lint
+./gradlew build      # every module: unit tests, lint, detekt, vast-core's API check
 ./gradlew :vast-core:test
+./gradlew :vast-core:updateKotlinAbi   # after a deliberate public API change
 ./gradlew publishToMavenLocal
 ```
+
+detekt's settings are in [config/detekt/detekt.yml](config/detekt/detekt.yml), which
+lists only what differs from detekt's defaults, each with its reason. A rule that
+does not fit one place is suppressed there, with the reason beside it, rather than
+switched off for every file.
 
 Android Studio's bundled JDK is enough; point `JAVA_HOME` at it when building
 from a terminal:
@@ -201,6 +207,16 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 The `vast-kit` tests run whole breaks in a real ExoPlayer under Robolectric.
 [GO-LIVE.md](GO-LIVE.md) lists what is still open before this serves real ads.
+
+## Known issues
+
+**Media3 1.11.1 holds a released ExoPlayer for its stuck-playing timeout** — 10
+seconds on a device, 30 on an emulator — and with it everything the player
+references, the session among them. `StuckPlayerDetector.release()` clears its
+messages before removing its listener, and removing a listener delivers the
+events still pending, which posts a fresh timeout. It lets go on its own. A
+LeakCanary run that watches a released session sooner than that reports it as
+retained, so the demo's debug build waits the timeout out first.
 
 ## License
 

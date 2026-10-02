@@ -1,5 +1,6 @@
 package com.kinodaran.vast.core
 
+import com.kinodaran.vast.core.VastUrls.appendPercentEncoded
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -126,6 +127,7 @@ public class VastMacroExpander {
     // MARK: - Values
 
     /** `null` means "leave the macro alone" — it is not one the spec defines. */
+    @Suppress("CyclomaticComplexMethod") // One entry per §6 macro.
     private fun replacement(name: String, context: Context): String? {
         context.custom[name]?.let { return encode(it) }
         val host = context.host
@@ -291,10 +293,12 @@ public class VastMacroExpander {
                 .apply { timeZone = TimeZone.getTimeZone("UTC") }
                 .format(Date(epochMillis))
 
-        internal fun randomCacheBuster(): String = String.format(Locale.US, "%08d", Random.nextInt(0, 100_000_000))
+        internal fun randomCacheBuster(): String = String.format(Locale.US, "%08d", Random.nextInt(0, CACHE_BUSTER_LIMIT))
+
+        /** Eight digits, the width `%08d` writes. */
+        private const val CACHE_BUSTER_LIMIT = 100_000_000
 
         private const val UNRESERVED = "-._~"
-        private const val HEX = "0123456789ABCDEF"
 
         /**
          * Percent-encodes one value. Applied per value rather than to the finished
@@ -305,12 +309,11 @@ public class VastMacroExpander {
         internal fun encode(value: String): String {
             val out = StringBuilder(value.length)
             for (byte in value.toByteArray(Charsets.UTF_8)) {
-                val unsigned = byte.toInt() and 0xFF
-                val char = unsigned.toChar()
-                if (unsigned < 0x80 && (char.isLetterOrDigit() || char in UNRESERVED)) {
+                val char = (byte.toInt() and 0xFF).toChar()
+                if (char < '\u0080' && (char.isLetterOrDigit() || char in UNRESERVED)) {
                     out.append(char)
                 } else {
-                    out.append('%').append(HEX[unsigned shr 4]).append(HEX[unsigned and 0x0F])
+                    out.appendPercentEncoded(byte)
                 }
             }
             return out.toString()

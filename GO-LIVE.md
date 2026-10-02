@@ -7,9 +7,10 @@ it that matters on release day.
 
 State: `./gradlew build` passes 203 tests — 169 in `vast-core`, ported from
 VastSDK-apple against the same fixtures, and 34 in `vast-kit`, most of them whole
-breaks in a real ExoPlayer under Robolectric — with no lint findings. The demo
+breaks in a real ExoPlayer under Robolectric — with no lint or detekt findings. The demo
 has been run on an API 36 phone emulator and an API 36 Android TV emulator,
-including a minified release build.
+including a minified release build. Its debug build hands what each closed player
+screen released to LeakCanary, and 20 open and close cycles leave nothing behind.
 
 ## Blockers
 
@@ -33,20 +34,24 @@ IAB OM SDK licence first; open on Apple platforms too. (#26)
 
 ## Important, not blocking
 
-**4. Process death.** A break interrupted by the process being killed is not
-restored. The host builds a new session and player when the app comes back, the
-tag is requested again, and whatever the ad server returns plays from the start
-as a new ad with an impression of its own. That is the honest failure — restoring
-a half-watched creative would resume an impression that already went out — but
-it should be agreed with the ad server's counting and written down. (#14)
+**4. Process death.** Decided: a break interrupted by the process being killed
+is not restored. The host builds a new session and player when the app comes
+back, the tag is requested again, and whatever the ad server returns plays from
+the start as a new ad with an impression of its own. Restoring a half-watched
+creative would resume an impression that already went out, so the new request is
+the honest failure. The ad server's reports see two impressions for that viewer,
+and whoever reads them should know why. (#14)
 
 **5. A shared conformance suite.** Parity with the Apple SDK is proved by the
 ported tests. Golden files exported from the Apple Harness would prove it
 byte for byte, and fail the moment either side changes behaviour; that needs a
 small change in VastSDK-apple. (#3, #11)
 
-**6. Static checks in CI.** detekt and the binary compatibility validator, so a
-public API change shows up in the diff. (#2)
+**6. An API check for the Android modules.** `vast-core`'s public API is in
+`vast-core/api/vast-core.api`, and a change to it fails the build until the dump
+is updated. Kotlin's ABI validation does not yet support Android modules built
+with AGP's built-in Kotlin, so `vast-kit` and `vast-compose` have no dump; their
+API changes show up only in review. detekt runs on every module. (#2)
 
 **7. The AdChoices icon is parsed but not drawn.** As on Apple platforms. (#27)
 

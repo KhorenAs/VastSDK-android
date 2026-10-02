@@ -129,7 +129,8 @@ public fun VastAdSurface(
         // being told it is an ad, and the controls go, because there they would
         // only look reachable.
         val interactive = !inPictureInPicture
-        if (interactive && !isTelevision && session.configuration.clickPresentation == VastClickPresentation.SURFACE && current.linear.clickThrough != null) {
+        val clickThrough = session.configuration.clickPresentation == VastClickPresentation.SURFACE && current.linear.clickThrough != null
+        if (interactive && !isTelevision && clickThrough) {
             Box(
                 Modifier
                     .fillMaxSize()

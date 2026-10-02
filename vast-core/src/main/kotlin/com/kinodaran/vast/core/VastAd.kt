@@ -183,11 +183,7 @@ public data class VastAd(
         }
 
         /** Ad servers wrap extension values in CDATA about as often as not. */
-        private fun text(body: String): String {
-            val trimmed = body.trim()
-            if (!trimmed.startsWith("<![CDATA[") || !trimmed.endsWith("]]>")) return trimmed
-            return trimmed.substring(9, trimmed.length - 3).trim()
-        }
+        private fun text(body: String): String = body.trim().removeSurrounding("<![CDATA[", "]]>").trim()
     }
 
     public data class MediaFile(

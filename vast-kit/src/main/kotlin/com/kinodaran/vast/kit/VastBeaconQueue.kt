@@ -33,7 +33,7 @@ public class VastBeaconQueue internal constructor(
     private class Entry(val recordedMillis: Long, val url: String)
 
     private val mutex = Mutex()
-    private var pending: MutableList<Entry>? = null
+    private var pending: List<Entry>? = null
 
     /** Keeps beacons that failed, so the next flush can try again. */
     public suspend fun enqueue(urls: List<String>): Unit = mutex.withLock {
@@ -57,7 +57,7 @@ public class VastBeaconQueue internal constructor(
     public suspend fun drain(): List<String> = mutex.withLock {
         val entries = trimmed(load())
         if (entries.isEmpty()) return@withLock emptyList()
-        pending = mutableListOf()
+        pending = emptyList()
         save(emptyList())
         entries.map { it.url }
     }
@@ -67,7 +67,7 @@ public class VastBeaconQueue internal constructor(
     // MARK: - Storage
 
     private fun load(): MutableList<Entry> {
-        pending?.let { return it }
+        pending?.let { return it.toMutableList() }
         val entries = mutableListOf<Entry>()
         runCatching {
             file?.takeIf { it.exists() }?.forEachLine { line ->
@@ -76,7 +76,7 @@ public class VastBeaconQueue internal constructor(
                 if (recorded != null) entries += Entry(recorded, line.substring(tab + 1))
             }
         }
-        pending = entries
+        pending = entries.toList()
         return entries
     }
 

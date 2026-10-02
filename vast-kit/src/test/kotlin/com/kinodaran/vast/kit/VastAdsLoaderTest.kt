@@ -28,6 +28,7 @@ import com.kinodaran.vast.core.VastException
 import com.kinodaran.vast.core.VastMacroExpander
 import com.kinodaran.vast.core.VastResourceLoader
 import com.kinodaran.vast.core.VastTrackingEvent
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import org.junit.After
 import org.junit.Before
@@ -81,7 +82,7 @@ class VastAdsLoaderTest {
         }
 
         override fun onAdProgress(ad: VastAd, timeSeconds: Double, durationSeconds: Double) {
-            progress += "%.2f@%.2f".format(timeSeconds, clock.elapsedRealtime() / 1000.0)
+            progress += "%.2f@%.2f".format(Locale.ROOT, timeSeconds, clock.elapsedRealtime() / 1000.0)
         }
     }
     private val progress = mutableListOf<String>()
@@ -510,7 +511,7 @@ class VastAdsLoaderTest {
                 documents[url] ?: throw VastException(VastError.WRAPPER_TIMEOUT)
         }
         val transport = object : VastBeaconTransport {
-            override suspend fun fire(beacons: List<VastBeacon>) {}
+            override suspend fun fire(beacons: List<VastBeacon>) = Unit
         }
         val environment = VastAdSession.Environment(
             transport = transport,
@@ -568,11 +569,11 @@ class VastAdsLoaderTest {
             mimeType: String = "video/mp4",
             clickThrough: String? = null,
         ): String {
-            val seq = sequence?.let { """ sequence="$it"""" } ?: ""
-            val skip = skipOffset?.let { """ skipoffset="$it"""" } ?: ""
+            val seq = sequence?.let { """ sequence="$it"""" }.orEmpty()
+            val skip = skipOffset?.let { """ skipoffset="$it"""" }.orEmpty()
             val click = clickThrough?.let {
                 "<VideoClicks><ClickThrough><![CDATA[$it]]></ClickThrough><ClickTracking><![CDATA[https://ads.test/$id/click]]></ClickTracking></VideoClicks>"
-            } ?: ""
+            }.orEmpty()
             val events = listOf("loaded", "creativeView", "start", "firstQuartile", "midpoint", "thirdQuartile", "complete", "skip", "pause", "resume")
                 .joinToString("") { """<Tracking event="$it"><![CDATA[https://ads.test/$id/$it]]></Tracking>""" }
             return """

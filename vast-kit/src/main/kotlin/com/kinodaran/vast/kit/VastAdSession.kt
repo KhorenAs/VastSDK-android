@@ -60,6 +60,7 @@ import kotlin.math.max
  * that handles its own. Rebuilt on rotation, they restart the break, and the ad
  * server is sent the same impression twice.
  */
+@Suppress("TooManyFunctions") // The SDK's facade: its API is its functions.
 public class VastAdSession internal constructor(
     public val configuration: VastConfiguration,
     private val environment: Environment,
@@ -217,8 +218,6 @@ public class VastAdSession internal constructor(
 
     /** Whether the session paused the player for a hold, and so owes it a restart. */
     private var heldPlayback = false
-
-    private val suspendedBySystem: Boolean get() = heldPlayback
 
     private enum class Hold { OFF_SCREEN, PICTURE_IN_PICTURE }
 
@@ -601,11 +600,12 @@ public class VastAdSession internal constructor(
         if (activeSlot === slot) stopTicking()
         send(slot.engine.fail(error), slot)
         slot.finished = true
-        slot.outcome = VastAdOutcome.Failed(error)
-        lastOutcome = slot.outcome!!
+        val outcome = VastAdOutcome.Failed(error)
+        slot.outcome = outcome
+        lastOutcome = outcome
         listener?.onAdFailed(error, slot.ad)
         if (activeSlot === slot) {
-            listener?.onAdFinished(slot.ad, slot.outcome!!)
+            listener?.onAdFinished(slot.ad, outcome)
             measurement?.finish()
             activeSlot = null
         }
@@ -647,7 +647,7 @@ public class VastAdSession internal constructor(
 
                 val now = environment.uptimeSeconds()
                 val player = breakPlayer
-                if (tick.adTime > lastPosition + 0.01) {
+                if (tick.adTime > lastPosition + ADVANCE_EPSILON_SECONDS) {
                     lastPosition = tick.adTime
                     lastAdvance = now
                 } else if (player == null || !player.wantsPlayback) {
@@ -804,8 +804,10 @@ public class VastAdSession internal constructor(
 
     internal fun suppressesAdUi(ad: VastAd?): Boolean = isHiddenUi.value && ad?.isUiHidden == true
 
-    internal fun skipPresentation(ad: VastAd?): VastSkipPresentation =
-        if (suppressesAdUi(ad) && configuration.skipPresentation == VastSkipPresentation.SDK) VastSkipPresentation.HOST else configuration.skipPresentation
+    internal fun skipPresentation(ad: VastAd?): VastSkipPresentation {
+        val drawnBySdk = configuration.skipPresentation == VastSkipPresentation.SDK
+        return if (suppressesAdUi(ad) && drawnBySdk) VastSkipPresentation.HOST else configuration.skipPresentation
+    }
 
     /**
      * The surface the creative will actually be shown on, used to rank media
@@ -850,9 +852,9 @@ public class VastAdSession internal constructor(
         val measurement = measurement ?: return
         var last: VastMeasurementEvent? = null
         for (beacon in beacons) {
-            val event = measurementEvent(beacon.kind, lastTick?.isMuted ?: false, slot?.engine?.duration ?: 0.0) ?: continue
+            val event = measurementEvent(beacon.kind, lastTick?.isMuted ?: false, slot?.engine?.duration ?: 0.0)
             // One `<Impression>` element per vendor is normal; one impression is what happened.
-            if (event == last) continue
+            if (event == null || event == last) continue
             last = event
             measurement.record(event)
         }
@@ -899,6 +901,9 @@ public class VastAdSession internal constructor(
          */
         const val STALL_TIMEOUT_SECONDS: Double = 10.0
 
+        /** Less than this between ticks is the playhead sitting still, not moving. */
+        const val ADVANCE_EPSILON_SECONDS: Double = 0.01
+
         /**
          * How close to the end of a creative a stop stops being a pause: wider than
          * the engine's own completion margin and than one tick, so it holds
@@ -910,6 +915,7 @@ public class VastAdSession internal constructor(
          * Beacons outlive the session that sent them: a screen closing the moment
          * an ad completes must not take the `complete` request down with it.
          */
+        @Suppress("InjectDispatcher") // Process-wide, and on I/O whatever the host runs on.
         private val DELIVERY = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
         private fun measurementEvent(kind: VastBeacon.Kind, isMuted: Boolean, duration: Double): VastMeasurementEvent? = when (kind) {

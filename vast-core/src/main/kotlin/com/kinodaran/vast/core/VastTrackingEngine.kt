@@ -249,9 +249,7 @@ public class VastTrackingEngine(
         if (duration <= 0) return emptyList()
         val progress = watched / duration
         val beacons = mutableListOf<VastBeacon>()
-        if (progress >= 0.25) beacons += fire(VastTrackingEvent.FIRST_QUARTILE)
-        if (progress >= 0.50) beacons += fire(VastTrackingEvent.MIDPOINT)
-        if (progress >= 0.75) beacons += fire(VastTrackingEvent.THIRD_QUARTILE)
+        for ((fraction, event) in QUARTILES) if (progress >= fraction) beacons += fire(event)
         return beacons
     }
 
@@ -280,6 +278,13 @@ public class VastTrackingEngine(
     }
 
     public companion object {
+        /** Where each quartile falls, as a fraction of the creative, in the order they fire. */
+        private val QUARTILES = listOf(
+            0.25 to VastTrackingEvent.FIRST_QUARTILE,
+            0.50 to VastTrackingEvent.MIDPOINT,
+            0.75 to VastTrackingEvent.THIRD_QUARTILE,
+        )
+
         /**
          * A jump larger than this, relative to what elapsed wall-clock allows, is
          * treated as a seek rather than playback.

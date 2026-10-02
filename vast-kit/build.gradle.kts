@@ -3,6 +3,7 @@
 plugins {
     alias(libs.plugins.android.library)
     `maven-publish`
+    alias(libs.plugins.detekt)
 }
 
 android {

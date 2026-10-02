@@ -117,7 +117,7 @@ object DemoVast {
      * moment the player reports the true length.
      */
     fun inLine(skipOffset: String?, id: String = "demo-1", duration: String = "00:00:52"): String {
-        val skip = skipOffset?.let { """ skipoffset="$it"""" } ?: ""
+        val skip = skipOffset?.let { """ skipoffset="$it"""" }.orEmpty()
         return """
             <?xml version="1.0" encoding="UTF-8"?>
             <VAST version="4.3">
@@ -174,7 +174,7 @@ object DemoVast {
     }
 
     private fun ad(id: String, sequence: Int, skipOffset: String?): String {
-        val skip = skipOffset?.let { """ skipoffset="$it"""" } ?: ""
+        val skip = skipOffset?.let { """ skipoffset="$it"""" }.orEmpty()
         return """
             <Ad id="$id" sequence="$sequence">
               <InLine>

@@ -2,7 +2,6 @@ package com.kinodaran.vast.kit
 
 import com.kinodaran.vast.core.VastBeacon
 import com.kinodaran.vast.core.VastResourceLoader
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -56,6 +55,7 @@ public class VastHttpTransport(
         if (retries.isNotEmpty()) deliver(retries)
     }
 
+    @Suppress("InjectDispatcher") // HttpURLConnection blocks; that belongs on I/O, whatever the caller runs on.
     private suspend fun deliver(urls: List<String>) {
         val undelivered = withContext(Dispatchers.IO) {
             coroutineScope {
@@ -99,7 +99,10 @@ public class VastHttpTransport(
             connection.instanceFollowRedirects = true
             val status = connection.responseCode
             // Drained so the connection can be reused; the body itself means nothing.
-            runCatching { (if (status < 400) connection.inputStream else connection.errorStream)?.use { it.readBytes() } }
+            runCatching {
+                val body = if (status < HttpURLConnection.HTTP_BAD_REQUEST) connection.inputStream else connection.errorStream
+                body?.use { it.readBytes() }
+            }
             return status
         } finally {
             connection.disconnect()
@@ -114,6 +117,7 @@ public class VastHttpTransport(
 /** Default loader for tags and Wrapper redirection. */
 public class VastHttpLoader : VastResourceLoader {
 
+    @Suppress("InjectDispatcher") // As in VastHttpTransport.
     override suspend fun loadVast(url: String, timeoutSeconds: Double): String = withContext(Dispatchers.IO) {
         val timeout = (timeoutSeconds * 1000).toInt().coerceAtLeast(1)
         val connection = URL(url).openConnection() as HttpURLConnection
@@ -126,8 +130,6 @@ public class VastHttpLoader : VastResourceLoader {
             val status = connection.responseCode
             if (status !in 200..299) throw IOException("VAST request answered $status")
             decode(connection.inputStream.use { it.readBytes() })
-        } catch (cancelled: CancellationException) {
-            throw cancelled
         } finally {
             connection.disconnect()
         }

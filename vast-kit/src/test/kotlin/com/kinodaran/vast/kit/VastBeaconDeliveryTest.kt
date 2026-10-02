@@ -171,7 +171,7 @@ class VastBeaconDeliveryTest {
     private class Server : AutoCloseable {
         @Volatile var status = 200
         val requested: MutableList<String> = Collections.synchronizedList(mutableListOf())
-        private val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
+        private val httpServer = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
             createContext("/") { exchange ->
                 requested += exchange.requestURI.path
                 exchange.sendResponseHeaders(status, -1)
@@ -180,8 +180,8 @@ class VastBeaconDeliveryTest {
             start()
         }
 
-        fun url(path: String) = "http://127.0.0.1:${server.address.port}/$path"
+        fun url(path: String) = "http://127.0.0.1:${httpServer.address.port}/$path"
 
-        override fun close() = server.stop(0)
+        override fun close() = httpServer.stop(0)
     }
 }

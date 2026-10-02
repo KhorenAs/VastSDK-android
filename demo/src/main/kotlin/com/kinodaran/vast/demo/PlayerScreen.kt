@@ -66,11 +66,6 @@ import com.kinodaran.vast.kit.VastSkipPresentation
 import com.kinodaran.vast.kit.withVastAds
 import kotlin.math.ceil
 
-/** How many player screens are alive, shown on the list: it must return to zero. */
-object LiveScreens {
-    var count by mutableIntStateOf(0)
-}
-
 /**
  * One scenario: the content with its break in front of it, the SDK's ad UI over
  * the player, and a log of what the session reported — the one thing a viewer
@@ -83,7 +78,8 @@ fun PlayerScreen(scenario: DemoScenario, onClose: () -> Unit) {
     val log = remember { mutableStateListOf<String>() }
 
     val session = remember(scenario.id) {
-        val configuration = if (scenario.hostDrawsUi) VastConfiguration(skipPresentation = VastSkipPresentation.HOST) else VastConfiguration()
+        val skipPresentation = if (scenario.hostDrawsUi) VastSkipPresentation.HOST else VastSkipPresentation.SDK
+        val configuration = VastConfiguration(skipPresentation = skipPresentation)
         VastAdSession(context, configuration).apply {
             isHiddenUi.value = scenario.hostDrawsUi
             listener = DemoListener(log)
@@ -141,10 +137,17 @@ fun PlayerScreen(scenario: DemoScenario, onClose: () -> Unit) {
         val pictureInPicture = session.observePictureInPicture(activity)
         onDispose {
             pictureInPicture.close()
+            val sessionPlayer = mediaSession.player
             mediaSession.release()
             session.release()
             player.release()
             LiveScreens.count -= 1
+            expectReleased(
+                session to "VastAdSession released",
+                player to "ExoPlayer released",
+                mediaSession to "MediaSession released",
+                sessionPlayer to "the media session's player",
+            )
         }
     }
 

@@ -38,14 +38,14 @@ class VastWrapperChainTest {
         adId: String = "w",
         verificationVendor: String? = null,
     ): String {
-        val click = clickThrough?.let { "<VideoClicks><ClickThrough><![CDATA[$it]]></ClickThrough></VideoClicks>" } ?: ""
+        val click = clickThrough?.let { "<VideoClicks><ClickThrough><![CDATA[$it]]></ClickThrough></VideoClicks>" }.orEmpty()
         val verifications = verificationVendor?.let {
             """
             <AdVerifications><Verification vendor="$it">
               <JavaScriptResource apiFramework="omid"><![CDATA[https://$it/omid.js]]></JavaScriptResource>
             </Verification></AdVerifications>
             """
-        } ?: ""
+        }.orEmpty()
         return """
             <VAST version="4.3"><Ad id="$adId"><Wrapper followAdditionalWrappers="$follow" allowMultipleAds="$allowMultipleAds">
               <VASTAdTagURI><![CDATA[$to]]></VASTAdTagURI>
@@ -61,7 +61,7 @@ class VastWrapperChainTest {
     }
 
     private fun inLine(clickThrough: String? = null): String {
-        val click = clickThrough?.let { "<VideoClicks><ClickThrough><![CDATA[$it]]></ClickThrough></VideoClicks>" } ?: ""
+        val click = clickThrough?.let { "<VideoClicks><ClickThrough><![CDATA[$it]]></ClickThrough></VideoClicks>" }.orEmpty()
         return """
             <VAST version="4.3"><Ad id="inline"><InLine>
               <AdSystem>test</AdSystem>
@@ -362,7 +362,7 @@ class VastWrapperChainTest {
     }
 
     private fun bareWrapper(to: String, allowMultiple: Boolean?): String {
-        val attribute = allowMultiple?.let { """ allowMultipleAds="$it"""" } ?: ""
+        val attribute = allowMultiple?.let { """ allowMultipleAds="$it"""" }.orEmpty()
         return """
             <VAST version="4.3"><Ad id="w"><Wrapper$attribute>
               <VASTAdTagURI><![CDATA[$to]]></VASTAdTagURI>

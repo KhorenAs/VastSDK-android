@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.library)
     `maven-publish`
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
 }
 
 android {

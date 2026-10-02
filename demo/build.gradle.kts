@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -43,4 +44,5 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.media3.ui.compose)
     implementation(libs.media3.session)
+    debugImplementation(libs.leakcanary.android)
 }

@@ -515,6 +515,8 @@ public final class com/kinodaran/vast/core/VastError$Companion {
 
 public final class com/kinodaran/vast/core/VastException : java/lang/Exception {
 	public fun <init> (Lcom/kinodaran/vast/core/VastError;)V
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lcom/kinodaran/vast/core/VastError;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getError ()Lcom/kinodaran/vast/core/VastError;
 }
 
@@ -680,6 +682,8 @@ public final class com/kinodaran/vast/core/VastTagResolver {
 
 public final class com/kinodaran/vast/core/VastTagResolver$Failure : java/lang/Exception {
 	public fun <init> (Lcom/kinodaran/vast/core/VastError;Ljava/util/List;)V
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;Ljava/util/List;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lcom/kinodaran/vast/core/VastError;Ljava/util/List;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getBeacons ()Ljava/util/List;
 	public final fun getError ()Lcom/kinodaran/vast/core/VastError;
 }

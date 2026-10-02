@@ -92,7 +92,7 @@ public class VastMediaSessionPlayer internal constructor(
     override fun getAvailableCommands(): Player.Commands {
         val commands = super.getAvailableCommands()
         if (!locks) return commands
-        return commands.buildUpon().removeAll(*LOCKED_COMMANDS).build()
+        return commands.buildUpon().apply { LOCKED_COMMANDS.forEach(::remove) }.build()
     }
 
     override fun isCommandAvailable(command: Int): Boolean =
@@ -164,7 +164,8 @@ public class VastMediaSessionPlayer internal constructor(
 
         override fun onEvents(player: Player, events: Player.Events) = listener.onEvents(self, events)
 
-        override fun onAvailableCommandsChanged(availableCommands: Player.Commands) = listener.onAvailableCommandsChanged(self.availableCommands)
+        override fun onAvailableCommandsChanged(availableCommands: Player.Commands) =
+            listener.onAvailableCommandsChanged(self.availableCommands)
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) = listener.onMediaMetadataChanged(self.mediaMetadata)
 
@@ -180,9 +181,11 @@ public class VastMediaSessionPlayer internal constructor(
 
         override fun onLoadingChanged(isLoading: Boolean) = listener.onLoadingChanged(isLoading)
 
-        override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) = listener.onTrackSelectionParametersChanged(parameters)
+        override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) =
+            listener.onTrackSelectionParametersChanged(parameters)
 
-        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) = listener.onPlayerStateChanged(playWhenReady, playbackState)
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) =
+            listener.onPlayerStateChanged(playWhenReady, playbackState)
 
         override fun onPlaybackStateChanged(playbackState: Int) = listener.onPlaybackStateChanged(playbackState)
 
@@ -206,11 +209,13 @@ public class VastMediaSessionPlayer internal constructor(
         override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) =
             listener.onPositionDiscontinuity(oldPosition, newPosition, reason)
 
-        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) = listener.onPlaybackParametersChanged(playbackParameters)
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) =
+            listener.onPlaybackParametersChanged(playbackParameters)
 
         override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) = listener.onSeekBackIncrementChanged(seekBackIncrementMs)
 
-        override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) = listener.onSeekForwardIncrementChanged(seekForwardIncrementMs)
+        override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) =
+            listener.onSeekForwardIncrementChanged(seekForwardIncrementMs)
 
         override fun onMaxSeekToPreviousPositionChanged(maxSeekToPreviousPositionMs: Long) =
             listener.onMaxSeekToPreviousPositionChanged(maxSeekToPreviousPositionMs)

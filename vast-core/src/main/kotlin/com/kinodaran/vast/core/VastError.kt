@@ -63,4 +63,5 @@ public enum class VastError(public val code: Int) {
 }
 
 /** A [VastError] raised as an exception, for the calls that throw one. */
-public class VastException(public val error: VastError) : Exception("VAST error ${error.code} ${error.name}")
+public class VastException @JvmOverloads constructor(public val error: VastError, cause: Throwable? = null) :
+    Exception("VAST error ${error.code} ${error.name}", cause)

@@ -12,8 +12,6 @@ package com.kinodaran.vast.core
  */
 internal object VastUrls {
 
-    private const val HEX = "0123456789ABCDEF"
-
     /** Characters RFC 3986 never allows unencoded outside an IPv6 host. */
     private const val ILLEGAL = " \"<>\\^`{|}[]"
 
@@ -32,8 +30,8 @@ internal object VastUrls {
             when {
                 char == '%' && isEscape(value, index) -> out.append(char)
                 char == '%' -> out.append("%25")
-                char.code < 0x21 || char.code == 0x7F || char in ILLEGAL -> appendEncoded(out, char.toString())
-                char.code > 0x7F -> {
+                char <= ' ' || char == '\u007F' || char in ILLEGAL -> appendEncoded(out, char.toString())
+                char > '\u007F' -> {
                     // A surrogate pair is one code point and one UTF-8 sequence.
                     val end = if (char.isHighSurrogate() && index + 1 < value.length) index + 2 else index + 1
                     appendEncoded(out, value.substring(index, end))
@@ -53,9 +51,15 @@ internal object VastUrls {
     private fun Char.isHexDigit(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 
     private fun appendEncoded(out: StringBuilder, text: String) {
-        for (byte in text.toByteArray(Charsets.UTF_8)) {
-            val unsigned = byte.toInt() and 0xFF
-            out.append('%').append(HEX[unsigned shr 4]).append(HEX[unsigned and 0x0F])
-        }
+        for (byte in text.toByteArray(Charsets.UTF_8)) out.appendPercentEncoded(byte)
+    }
+
+    private const val HEX = "0123456789ABCDEF"
+
+    /** `%XX`, upper-case as RFC 3986 asks, for one byte of UTF-8. */
+    @Suppress("MagicNumber") // A byte's two hex digits.
+    fun StringBuilder.appendPercentEncoded(byte: Byte): StringBuilder {
+        val unsigned = byte.toInt() and 0xFF
+        return append('%').append(HEX[unsigned shr 4]).append(HEX[unsigned and 0x0F])
     }
 }

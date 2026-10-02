@@ -63,9 +63,9 @@ public class VastMediaFileSelector {
     private fun cost(file: VastAd.MediaFile, capabilities: Capabilities): Double {
         var score = 0.0
 
-        val width = file.width
-        val height = file.height
-        if (width != null && height != null && width > 0 && height > 0) {
+        val width = file.width?.takeIf { it > 0 }
+        val height = file.height?.takeIf { it > 0 }
+        if (width != null && height != null) {
             val widthRatio = width.toDouble() / max(capabilities.width, 1)
             val heightRatio = height.toDouble() / max(capabilities.height, 1)
             val ratio = max(widthRatio, heightRatio)
@@ -75,13 +75,13 @@ public class VastMediaFileSelector {
         } else {
             // Undeclared dimensions are common and are not disqualifying, but a file
             // that states its size is a safer pick when one exists.
-            score += 0.5
+            score += UNDECLARED_SIZE_COST
         }
 
         // Android refuses cleartext by default from API 28, and a response offering
         // both renditions would otherwise have the http one chosen and then fail as
         // a media error. Small, so it only decides between otherwise equal files.
-        if (!file.url.startsWith("https:", ignoreCase = true)) score += 0.25
+        if (!file.url.startsWith("https:", ignoreCase = true)) score += CLEARTEXT_COST
 
         val ceiling = capabilities.preferredBitrate
         val bitrate = effectiveBitrate(file)
@@ -101,3 +101,9 @@ public class VastMediaFileSelector {
         return (minimum + maximum) / 2
     }
 }
+
+/** What a file that does not state its size gives up to one that does. */
+private const val UNDECLARED_SIZE_COST = 0.5
+
+/** What an `http` rendition gives up to an `https` one: enough to decide a tie, no more. */
+private const val CLEARTEXT_COST = 0.25

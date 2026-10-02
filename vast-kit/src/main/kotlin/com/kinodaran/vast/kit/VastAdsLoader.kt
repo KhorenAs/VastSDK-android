@@ -13,6 +13,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.util.Clock
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -142,8 +143,9 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         nextPlayer = player
     }
 
-    /** Any content type: a break does not depend on how the content is delivered. */
-    override fun setSupportedContentTypes(vararg contentTypes: Int) {}
+    override fun setSupportedContentTypes(vararg contentTypes: Int) {
+        // Any content type: a break does not depend on how the content is delivered.
+    }
 
     override fun start(
         adsMediaSource: AdsMediaSource,
@@ -250,7 +252,8 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         // `isActive` rather than a null check: a response that resolves at once can
         // finish inside `resolve` itself, before its job is ever assigned here, and
         // a completed job left in the field would hold the queue shut for good.
-        if (adPlaybackState == null || resolution?.isActive == true || openBreaks.isNotEmpty() || player.isPlayingAd) return
+        val busy = resolution?.isActive == true || openBreaks.isNotEmpty() || player.isPlayingAd
+        if (adPlaybackState == null || busy) return
         val tag = pending.removeFirstOrNull() ?: return
         session.notePendingBreaks(pending.size)
         resolution = session.resolve(tag, blocking = false) { planned -> onMidrollResolved(adsId, planned) }
@@ -309,7 +312,7 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         if ((0 until known.adGroupCount).none { known.getAdGroup(it).timeUs == positionUs }) return
         midrollAwaitingSeekUs = null
         // The group's own position, in window time, which is what a seek is given.
-        player.seekTo(positionUs / 1000 + period.positionInWindowMs)
+        player.seekTo(Util.usToMs(positionUs) + period.positionInWindowMs)
     }
 
     /** A new ad group at [positionUs] holding [slots], recorded as an open break. */
@@ -372,31 +375,41 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     private fun sync(naturally: Boolean) {
         val player = player ?: return
         val state = adPlaybackState ?: return
-        val current = if (player.isPlayingAd && isOurPeriod(player)) slotAt(player.currentAdGroupIndex, player.currentAdIndexInAdGroup) else null
-
-        val left = playing
-        if (left != null && left !== current) {
-            session.slotLeft(left, naturally)
-            // Played, unless it was already settled some other way — skipped,
-            // abandoned, or failed.
-            val group = groupIndexOf(state, left.groupTimeUs)
-            if (group != null && state.getAdGroup(group).states.getOrNull(left.index) == AdPlaybackState.AD_STATE_AVAILABLE) {
-                deliver(state.withPlayedAd(group, left.index))
-            }
-        }
-        if (current != null && current !== playing) {
-            if (hostSpeed == null) {
-                hostSpeed = player.playbackParameters.speed
-                if (hostSpeed != 1f) player.setPlaybackSpeed(1f)
-            }
-            val total = breaks[current.groupTimeUs]?.size ?: 1
-            session.slotStarted(current, total, VastPlayerClock(player, { slotAt(it) === current }, clockOf(player)))
-        }
+        val current = slotAt(player)
+        playing?.takeIf { it !== current }?.let { leave(it, state, naturally) }
+        if (current != null && current !== playing) enter(current, player)
         playing = current
+        closeSettledBreaks(current, player)
+        if (current == null) startNextPending()
+    }
 
-        // A break is over when every ad in it is settled and the player is not on
-        // one of them — which covers a break whose every ad failed to load and that
-        // the player therefore never entered.
+    /** The player moved off [slot]. */
+    private fun leave(slot: VastAdSlot, state: AdPlaybackState, naturally: Boolean) {
+        session.slotLeft(slot, naturally)
+        // Played, unless it was already settled some other way — skipped,
+        // abandoned, or failed.
+        val group = groupIndexOf(state, slot.groupTimeUs) ?: return
+        if (state.getAdGroup(group).states.getOrNull(slot.index) == AdPlaybackState.AD_STATE_AVAILABLE) {
+            deliver(state.withPlayedAd(group, slot.index))
+        }
+    }
+
+    /** The player moved onto [slot]: the creative plays at 1×, whatever the content was at. */
+    private fun enter(slot: VastAdSlot, player: Player) {
+        if (hostSpeed == null) {
+            hostSpeed = player.playbackParameters.speed
+            if (hostSpeed != 1f) player.setPlaybackSpeed(1f)
+        }
+        val total = breaks[slot.groupTimeUs]?.size ?: 1
+        session.slotStarted(slot, total, VastPlayerClock(player, { slotAt(it) === slot }, clockOf(player)))
+    }
+
+    /**
+     * A break is over when every ad in it is settled and the player is not on
+     * one of them — which covers a break whose every ad failed to load and that
+     * the player therefore never entered.
+     */
+    private fun closeSettledBreaks(current: VastAdSlot?, player: Player) {
         for (positionUs in openBreaks.toList()) {
             if (current?.groupTimeUs == positionUs || !isSettled(positionUs)) continue
             openBreaks -= positionUs
@@ -404,7 +417,6 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
             hostSpeed = null
             session.breakEnded()
         }
-        if (current == null) startNextPending()
     }
 
     /** ExoPlayer's own clock where there is one — a fake one, in tests — and the system's otherwise. */
@@ -433,7 +445,9 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     private fun isSettled(positionUs: Long): Boolean {
         val state = adPlaybackState ?: return true
         val group = groupIndexOf(state, positionUs)?.let(state::getAdGroup) ?: return true
-        return group.states.take(group.count.coerceAtLeast(0)).none { it == AdPlaybackState.AD_STATE_AVAILABLE || it == AdPlaybackState.AD_STATE_UNAVAILABLE }
+        return group.states.take(group.count.coerceAtLeast(0)).none {
+            it == AdPlaybackState.AD_STATE_AVAILABLE || it == AdPlaybackState.AD_STATE_UNAVAILABLE
+        }
     }
 
     /**
@@ -444,8 +458,8 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
     private fun contentPeriodPositionUs(player: Player): Long {
         val timeline = player.currentTimeline
         val windowPositionMs = player.contentPosition
-        if (timeline.isEmpty) return windowPositionMs * 1000
-        return (windowPositionMs - timeline.getPeriod(player.currentPeriodIndex, period).positionInWindowMs) * 1000
+        if (timeline.isEmpty) return Util.msToUs(windowPositionMs)
+        return Util.msToUs(windowPositionMs - timeline.getPeriod(player.currentPeriodIndex, period).positionInWindowMs)
     }
 
     public companion object {

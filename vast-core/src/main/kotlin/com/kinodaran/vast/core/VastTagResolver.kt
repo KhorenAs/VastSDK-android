@@ -23,8 +23,12 @@ public class VastTagResolver(
      * Raised when the chain ends without a playable ad. [beacons] are the
      * `<Error>` requests owed to every Wrapper that was traversed.
      */
-    public class Failure(public val error: VastError, public val beacons: List<VastBeacon>) :
-        Exception("VAST resolution failed with ${error.code} ${error.name}")
+    public class Failure @JvmOverloads constructor(
+        public val error: VastError,
+        public val beacons: List<VastBeacon>,
+        cause: Throwable? = null,
+    ) :
+        Exception("VAST resolution failed with ${error.code} ${error.name}", cause)
 
     private val parser = VastParser()
 
@@ -49,6 +53,7 @@ public class VastTagResolver(
     }
 
     /** Walks the redirect chain from [url], carrying what has been collected. */
+    @Suppress("TooGenericExceptionCaught") // A host's loader can fail any way it likes; every way is a 301.
     private suspend fun follow(url: String, chain: VastWrapperChain): Resolution {
         var next = url
 
@@ -59,10 +64,10 @@ public class VastTagResolver(
                 // Cancellation is the caller leaving, not the redirect failing:
                 // nothing is reported for a break nobody is waiting for.
                 throw cancelled
-            } catch (_: Exception) {
+            } catch (cause: Exception) {
                 // A dead or slow redirect is a 301, and the wrappers already
                 // traversed still expect to hear about it.
-                throw Failure(VastError.WRAPPER_TIMEOUT, chain.errorBeacons(VastError.WRAPPER_TIMEOUT))
+                throw Failure(VastError.WRAPPER_TIMEOUT, chain.errorBeacons(VastError.WRAPPER_TIMEOUT), cause)
             }
 
             when (val step = step(xml, next, chain)) {
@@ -77,7 +82,7 @@ public class VastTagResolver(
         val document = try {
             parser.parse(xml)
         } catch (failure: VastException) {
-            throw Failure(failure.error, chain.errorBeacons(failure.error))
+            throw Failure(failure.error, chain.errorBeacons(failure.error), failure)
         }
         return chain.accept(document, baseUrl)
     }

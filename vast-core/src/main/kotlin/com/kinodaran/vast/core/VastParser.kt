@@ -38,12 +38,12 @@ public class VastParser {
             } catch (_: SAXException) {
             }
             reader.parse(InputSource(StringReader(xml)))
-        } catch (_: SAXException) {
-            throw VastException(VastError.XML_PARSING)
-        } catch (_: IOException) {
-            throw VastException(VastError.XML_PARSING)
-        } catch (_: ParserConfigurationException) {
-            throw VastException(VastError.XML_PARSING)
+        } catch (cause: SAXException) {
+            throw VastException(VastError.XML_PARSING, cause)
+        } catch (cause: IOException) {
+            throw VastException(VastError.XML_PARSING, cause)
+        } catch (cause: ParserConfigurationException) {
+            throw VastException(VastError.XML_PARSING, cause)
         }
         // A VAST 1.0 document is well-formed XML under a different root element.
         // Reporting it as a parse error would tell the ad server the wrong thing,
@@ -95,8 +95,8 @@ private class Builder : DefaultHandler2() {
     private var adSequence: Int? = null
     private var isWrapper = false
 
-    private var impressions = mutableListOf<String>()
-    private var errors = mutableListOf<String>()
+    private val impressions = mutableListOf<String>()
+    private val errors = mutableListOf<String>()
     private var tagUri: String? = null
     private var adSystem: String? = null
     private var adTitle: String? = null
@@ -107,41 +107,41 @@ private class Builder : DefaultHandler2() {
     // VAST 4 metadata. Required elements, in the parts of the spec that decide
     // whose count is right when two reports disagree.
     private var adServingId: String? = null
-    private var universalAdIds = mutableListOf<VastAd.UniversalAdId>()
+    private val universalAdIds = mutableListOf<VastAd.UniversalAdId>()
     private var pendingUniversalAdIdRegistry: String? = null
     private var advertiser: String? = null
     private var pricing: VastAd.Pricing? = null
     private var pendingPricing: Map<String, String> = emptyMap()
-    private var categories = mutableListOf<VastAd.Category>()
+    private val categories = mutableListOf<VastAd.Category>()
     private var pendingCategoryAuthority: String? = null
     private var expires: Double? = null
 
     // Current <ViewableImpression>
     private var sawViewableImpression = false
     private var viewableImpressionId: String? = null
-    private var viewable = mutableListOf<String>()
-    private var notViewable = mutableListOf<String>()
-    private var viewUndetermined = mutableListOf<String>()
+    private val viewable = mutableListOf<String>()
+    private val notViewable = mutableListOf<String>()
+    private val viewUndetermined = mutableListOf<String>()
 
     // Current <Icon>
-    private var icons = mutableListOf<VastAd.Icon>()
+    private val icons = mutableListOf<VastAd.Icon>()
     private var insideIcon = false
     private var pendingIcon: Map<String, String> = emptyMap()
     private var iconStaticResource: String? = null
     private var iconStaticType: String? = null
     private var iconClickThrough: String? = null
-    private var iconClickTracking = mutableListOf<String>()
-    private var iconViewTracking = mutableListOf<String>()
+    private val iconClickTracking = mutableListOf<String>()
+    private val iconViewTracking = mutableListOf<String>()
 
     // Current <Linear>
     private var duration = 0.0
     private var skipOffset: VastAd.SkipOffset? = null
-    private var mediaFiles = mutableListOf<VastAd.MediaFile>()
+    private val mediaFiles = mutableListOf<VastAd.MediaFile>()
     private var clickThrough: String? = null
-    private var clickTracking = mutableListOf<String>()
-    private var customClicks = mutableListOf<String>()
-    private var tracking = LinkedHashMap<VastTrackingEvent, MutableList<String>>()
-    private var progress = mutableListOf<VastAd.ProgressEvent>()
+    private val clickTracking = mutableListOf<String>()
+    private val customClicks = mutableListOf<String>()
+    private val tracking = LinkedHashMap<VastTrackingEvent, MutableList<String>>()
+    private val progress = mutableListOf<VastAd.ProgressEvent>()
 
     private var pendingTrackingEvent: String? = null
     private var pendingTrackingOffset: String? = null
@@ -159,7 +159,7 @@ private class Builder : DefaultHandler2() {
     // and vendors shipped the same content inside <Extension type="AdVerifications">.
     // Both shapes land in the same list — a host should not have to know which
     // version the server speaks.
-    private var verifications = mutableListOf<VastVerification>()
+    private val verifications = mutableListOf<VastVerification>()
 
     /** Inside `<AdVerifications>` — or the VAST 3 extension standing in for it. */
     private var insideVerifications = false
@@ -170,19 +170,21 @@ private class Builder : DefaultHandler2() {
      */
     private var extensionIsVerifications = false
     private var verificationVendor: String? = null
-    private var verificationResources = mutableListOf<VastVerification.Resource>()
+    private val verificationResources = mutableListOf<VastVerification.Resource>()
     private var verificationParameters: String? = null
-    private var verificationNotExecuted = mutableListOf<String>()
+    private val verificationNotExecuted = mutableListOf<String>()
     private var pendingResource: Map<String, String> = emptyMap()
 
     // Raw <Extension> capture
-    private var extensions = mutableListOf<VastAd.Extension>()
+    private val extensions = mutableListOf<VastAd.Extension>()
     private var extensionDepth = 0
     private var extensionType: String? = null
     private val extensionXml = StringBuilder()
 
     // MARK: Content
 
+    // One branch per VAST element: split up, the element table would be scattered.
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun startElement(uri: String?, localName: String?, qName: String?, attrs: Attributes) {
         val element = qName?.takeIf { it.isNotEmpty() } ?: localName.orEmpty()
         val attributes = attributeMap(attrs)
@@ -204,11 +206,11 @@ private class Builder : DefaultHandler2() {
         text.setLength(0)
 
         when (element) {
-            "VAST" -> version = attributes["version"] ?: ""
+            "VAST" -> version = attributes["version"].orEmpty()
 
             "Ad" -> {
                 resetAd()
-                adId = attributes["id"] ?: ""
+                adId = attributes["id"].orEmpty()
                 adSequence = attributes["sequence"]?.let(::integer)
             }
 
@@ -241,8 +243,8 @@ private class Builder : DefaultHandler2() {
                 iconStaticResource = null
                 iconStaticType = null
                 iconClickThrough = null
-                iconClickTracking = mutableListOf()
-                iconViewTracking = mutableListOf()
+                iconClickTracking.clear()
+                iconViewTracking.clear()
             }
 
             // Also a NonLinear and Companion element, neither of which this SDK
@@ -257,9 +259,9 @@ private class Builder : DefaultHandler2() {
 
             "Verification" -> {
                 verificationVendor = attributes["vendor"]
-                verificationResources = mutableListOf()
+                verificationResources.clear()
                 verificationParameters = null
-                verificationNotExecuted = mutableListOf()
+                verificationNotExecuted.clear()
                 // A Verification outside <AdVerifications> is the VAST 3 shape with
                 // the wrapper element omitted; treat the scope as open either way.
                 insideVerifications = true
@@ -328,6 +330,7 @@ private class Builder : DefaultHandler2() {
         }
     }
 
+    @Suppress("LongMethod") // One branch per VAST element, as in startElement.
     private fun closeElement(element: String) {
         if (extensionDepth > 0) {
             extensionDepth -= 1
@@ -467,8 +470,8 @@ private class Builder : DefaultHandler2() {
         mediaFiles += VastAd.MediaFile(
             id = attributes["id"],
             url = url,
-            mimeType = attributes["type"] ?: "",
-            delivery = VastAd.Delivery.fromVastName(attributes["delivery"] ?: "") ?: VastAd.Delivery.PROGRESSIVE,
+            mimeType = attributes["type"].orEmpty(),
+            delivery = VastAd.Delivery.fromVastName(attributes["delivery"].orEmpty()) ?: VastAd.Delivery.PROGRESSIVE,
             width = attributes["width"]?.let(::integer),
             height = attributes["height"]?.let(::integer),
             bitrate = attributes["bitrate"]?.let(::integer),
@@ -518,9 +521,9 @@ private class Builder : DefaultHandler2() {
             )
         }
         verificationVendor = null
-        verificationResources = mutableListOf()
+        verificationResources.clear()
         verificationParameters = null
-        verificationNotExecuted = mutableListOf()
+        verificationNotExecuted.clear()
     }
 
     /** A `<ViewableImpression>` with no URI at all asked for nothing. */
@@ -564,10 +567,11 @@ private class Builder : DefaultHandler2() {
         iconStaticResource = null
         iconStaticType = null
         iconClickThrough = null
-        iconClickTracking = mutableListOf()
-        iconViewTracking = mutableListOf()
+        iconClickTracking.clear()
+        iconViewTracking.clear()
     }
 
+    @Suppress("LongMethod") // Every field of an ad, assembled in one place.
     private fun finishAd() {
         val entry: VastDocument.Entry
 
@@ -650,24 +654,24 @@ private class Builder : DefaultHandler2() {
 
     private fun resetAd() {
         adId = ""; adSequence = null; isWrapper = false
-        impressions = mutableListOf(); errors = mutableListOf(); tagUri = null
+        impressions.clear(); errors.clear(); tagUri = null
         adSystem = null; adTitle = null
         followAdditionalWrappers = true; allowMultipleAds = false; fallbackOnNoAd = null
-        duration = 0.0; skipOffset = null; mediaFiles = mutableListOf()
-        clickThrough = null; clickTracking = mutableListOf(); customClicks = mutableListOf()
-        tracking = LinkedHashMap(); progress = mutableListOf()
-        adServingId = null; universalAdIds = mutableListOf(); pendingUniversalAdIdRegistry = null
+        duration = 0.0; skipOffset = null; mediaFiles.clear()
+        clickThrough = null; clickTracking.clear(); customClicks.clear()
+        tracking.clear(); progress.clear()
+        adServingId = null; universalAdIds.clear(); pendingUniversalAdIdRegistry = null
         advertiser = null; pricing = null; pendingPricing = emptyMap()
-        categories = mutableListOf(); pendingCategoryAuthority = null; expires = null
+        categories.clear(); pendingCategoryAuthority = null; expires = null
         sawViewableImpression = false; viewableImpressionId = null
-        viewable = mutableListOf(); notViewable = mutableListOf(); viewUndetermined = mutableListOf()
-        icons = mutableListOf(); insideIcon = false; pendingIcon = emptyMap()
+        viewable.clear(); notViewable.clear(); viewUndetermined.clear()
+        icons.clear(); insideIcon = false; pendingIcon = emptyMap()
         iconStaticResource = null; iconStaticType = null; iconClickThrough = null
-        iconClickTracking = mutableListOf(); iconViewTracking = mutableListOf()
-        extensions = mutableListOf(); sawUnplayableCreative = false
-        verifications = mutableListOf(); insideVerifications = false; extensionIsVerifications = false
-        verificationVendor = null; verificationResources = mutableListOf()
-        verificationParameters = null; verificationNotExecuted = mutableListOf(); pendingResource = emptyMap()
+        iconClickTracking.clear(); iconViewTracking.clear()
+        extensions.clear(); sawUnplayableCreative = false
+        verifications.clear(); insideVerifications = false; extensionIsVerifications = false
+        verificationVendor = null; verificationResources.clear()
+        verificationParameters = null; verificationNotExecuted.clear(); pendingResource = emptyMap()
     }
 
     private fun append(value: String, list: MutableList<String>) {
@@ -698,11 +702,14 @@ private fun integer(value: String): Int? =
 private fun decimal(value: String): Double? =
     if (Regex("[+-]?([0-9]+\\.?[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)?").matches(value)) value.toDouble() else null
 
+/** Hours, minutes and seconds. */
+private const val TIMESTAMP_PARTS = 3
+
 /** `HH:MM:SS` or `HH:MM:SS.mmm`. */
 private fun seconds(value: String): Double? {
     // Swift's `split` drops empty pieces, so `00::10` is two parts, not three.
     val parts = value.split(':').filter { it.isNotEmpty() }
-    if (parts.size != 3) return null
+    if (parts.size != TIMESTAMP_PARTS) return null
     val hours = decimal(parts[0]) ?: return null
     val minutes = decimal(parts[1]) ?: return null
     val seconds = decimal(parts[2]) ?: return null

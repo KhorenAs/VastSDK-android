@@ -73,7 +73,7 @@ class VastUiHiddenTest {
     private fun ad(uiSettings: String): VastAd = firstAd(response("""<Extension type="uiSettings">$uiSettings</Extension>"""))
 
     private fun response(extensions: String?): String {
-        val block = extensions?.let { "<Extensions>$it</Extensions>" } ?: ""
+        val block = extensions?.let { "<Extensions>$it</Extensions>" }.orEmpty()
         return """
             <VAST version="4.3"><Ad id="a"><InLine>
               <AdSystem>test</AdSystem>
