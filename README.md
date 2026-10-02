@@ -227,8 +227,9 @@ lists only what differs from detekt's defaults, each with its reason. A rule tha
 does not fit one place is suppressed there, with the reason beside it, rather than
 switched off for every file.
 
-Android Studio's bundled JDK is enough; point `JAVA_HOME` at it when building
-from a terminal:
+The build runs on JDK 25, the one [gradle/gradle-daemon-jvm.properties](gradle/gradle-daemon-jvm.properties)
+names — Android Studio's bundled JDK, and CI's. Gradle downloads it on a machine
+without it. From a terminal, Android Studio's will do:
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"

@@ -1,6 +1,10 @@
 # JitPack builds a tag the first time someone asks for it, and serves it as
 # com.github.KhorenAs.VastSDK-android:<module>:<tag>. The build reads JitPack's
 # JITPACK and VERSION variables to publish under those names.
+#
+# JDK 21 only launches Gradle. The build itself runs on the JDK that
+# gradle/gradle-daemon-jvm.properties names, and Gradle downloads it when the
+# machine does not have it — JitPack's does not.
 jdk:
   - openjdk21
 install:
