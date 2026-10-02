@@ -2,6 +2,7 @@
 // and a Material dependency here would pin the host's Material version.
 plugins {
     alias(libs.plugins.android.library)
+    `maven-publish`
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -19,6 +20,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+
     buildFeatures {
         compose = true
     }
@@ -34,4 +41,13 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            artifactId = "vast-compose"
+            afterEvaluate { from(components["release"]) }
+        }
+    }
 }

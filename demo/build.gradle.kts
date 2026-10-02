@@ -20,6 +20,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    buildTypes {
+        // Minified, the way a host ships: what R8 strips or renames in the SDK shows
+        // up here first. Signed with the debug key so it installs on an emulator.
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
     buildFeatures {
         compose = true
     }

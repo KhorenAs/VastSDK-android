@@ -2,6 +2,7 @@
 // lives in vast-compose and only draws the state this module publishes.
 plugins {
     alias(libs.plugins.android.library)
+    `maven-publish`
 }
 
 android {
@@ -22,6 +23,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
     }
 }
 
@@ -49,4 +56,13 @@ dependencies {
     testImplementation(libs.media3.test.utils)
     testImplementation(libs.media3.test.utils.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            artifactId = "vast-kit"
+            afterEvaluate { from(components["release"]) }
+        }
+    }
 }

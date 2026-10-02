@@ -1,5 +1,6 @@
 package com.kinodaran.vast.demo
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -9,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -20,11 +22,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.kinodaran.vast.core.VastVersion
 
@@ -51,12 +58,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun ScenarioList(onSelect: (DemoScenario) -> Unit) {
+    // A D-pad has nothing to move until something holds focus, so on a TV the
+    // first scenario takes it.
+    val firstItem = remember { FocusRequester() }
+    val isTelevision = isTelevision()
+    LaunchedEffect(isTelevision) { if (isTelevision) runCatching { firstItem.requestFocus() } }
     LazyColumn(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
         item {
             Text("VastSDK ${VastVersion.CURRENT}", Modifier.padding(16.dp), style = MaterialTheme.typography.headlineSmall)
         }
         items(DemoCatalog.scenarios, key = { it.id }) { scenario ->
-            Column(Modifier.clickable { onSelect(scenario) }.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            val focus = if (scenario == DemoCatalog.scenarios.first()) Modifier.focusRequester(firstItem) else Modifier
+            Column(Modifier.fillMaxWidth().then(focus).clickable { onSelect(scenario) }.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Text(scenario.title, style = MaterialTheme.typography.titleMedium)
                 Text(scenario.detail, style = MaterialTheme.typography.bodySmall)
             }
@@ -68,4 +81,11 @@ private fun ScenarioList(onSelect: (DemoScenario) -> Unit) {
             Text("Live player screens: ${LiveScreens.count}", Modifier.padding(16.dp), style = MaterialTheme.typography.labelMedium)
         }
     }
+}
+
+/** A leanback device: no touchscreen, a D-pad, and a screen across the room. */
+@Composable
+fun isTelevision(): Boolean {
+    val context = LocalContext.current
+    return remember(context) { context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK) }
 }

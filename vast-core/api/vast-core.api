@@ -1,0 +1,896 @@
+public final class com/kinodaran/vast/core/VastAd {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Linear;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;Ljava/util/List;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Pricing;Ljava/util/List;Ljava/lang/Double;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Linear;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;Ljava/util/List;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Pricing;Ljava/util/List;Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/util/List;
+	public final fun component13 ()Lcom/kinodaran/vast/core/VastAd$ViewableImpression;
+	public final fun component14 ()Ljava/util/List;
+	public final fun component15 ()Ljava/lang/String;
+	public final fun component16 ()Lcom/kinodaran/vast/core/VastAd$Pricing;
+	public final fun component17 ()Ljava/util/List;
+	public final fun component18 ()Ljava/lang/Double;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lcom/kinodaran/vast/core/VastAd$Linear;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Linear;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;Ljava/util/List;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Pricing;Ljava/util/List;Ljava/lang/Double;)Lcom/kinodaran/vast/core/VastAd;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Linear;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;Ljava/util/List;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Pricing;Ljava/util/List;Ljava/lang/Double;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdServingId ()Ljava/lang/String;
+	public final fun getAdSystem ()Ljava/lang/String;
+	public final fun getAdVerifications ()Ljava/util/List;
+	public final fun getAdvertiser ()Ljava/lang/String;
+	public final fun getCategories ()Ljava/util/List;
+	public final fun getErrors ()Ljava/util/List;
+	public final fun getExpires ()Ljava/lang/Double;
+	public final fun getExtensions ()Ljava/util/List;
+	public final fun getIcons ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getImpressions ()Ljava/util/List;
+	public final fun getLinear ()Lcom/kinodaran/vast/core/VastAd$Linear;
+	public final fun getPricing ()Lcom/kinodaran/vast/core/VastAd$Pricing;
+	public final fun getSequence ()Ljava/lang/Integer;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getUniversalAdIds ()Ljava/util/List;
+	public final fun getViewableImpression ()Lcom/kinodaran/vast/core/VastAd$ViewableImpression;
+	public final fun getWrapperAdIds ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isPartOfPod ()Z
+	public final fun isSkippable ()Z
+	public final fun isUiHidden ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Category {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastAd$Category;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$Category;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$Category;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthority ()Ljava/lang/String;
+	public final fun getCode ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Delivery : java/lang/Enum {
+	public static final field Companion Lcom/kinodaran/vast/core/VastAd$Delivery$Companion;
+	public static final field PROGRESSIVE Lcom/kinodaran/vast/core/VastAd$Delivery;
+	public static final field STREAMING Lcom/kinodaran/vast/core/VastAd$Delivery;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getVastName ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastAd$Delivery;
+	public static fun values ()[Lcom/kinodaran/vast/core/VastAd$Delivery;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Delivery$Companion {
+	public final fun fromVastName (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastAd$Delivery;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Extension {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastAd$Extension;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$Extension;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$Extension;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getType ()Ljava/lang/String;
+	public final fun getXml ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun value (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Icon {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/util/List;
+	public final fun component12 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Double;
+	public final fun component7 ()Ljava/lang/Double;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lcom/kinodaran/vast/core/VastAd$Icon;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$Icon;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$Icon;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClickThrough ()Ljava/lang/String;
+	public final fun getClickTracking ()Ljava/util/List;
+	public final fun getDuration ()Ljava/lang/Double;
+	public final fun getHeight ()Ljava/lang/Integer;
+	public final fun getOffset ()Ljava/lang/Double;
+	public final fun getProgram ()Ljava/lang/String;
+	public final fun getStaticResource ()Ljava/lang/String;
+	public final fun getStaticResourceType ()Ljava/lang/String;
+	public final fun getViewTracking ()Ljava/util/List;
+	public final fun getWidth ()Ljava/lang/Integer;
+	public final fun getXPosition ()Ljava/lang/String;
+	public final fun getYPosition ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Linear {
+	public fun <init> (DLcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;)V
+	public synthetic fun <init> (DLcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Lcom/kinodaran/vast/core/VastAd$SkipOffset;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun component8 ()Ljava/util/List;
+	public final fun copy (DLcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;)Lcom/kinodaran/vast/core/VastAd$Linear;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$Linear;DLcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$Linear;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClickThrough ()Ljava/lang/String;
+	public final fun getClickTracking ()Ljava/util/List;
+	public final fun getCustomClicks ()Ljava/util/List;
+	public final fun getDuration ()D
+	public final fun getMediaFiles ()Ljava/util/List;
+	public final fun getProgressEvents ()Ljava/util/List;
+	public final fun getSkipOffset ()Lcom/kinodaran/vast/core/VastAd$SkipOffset;
+	public final fun getTrackingEvents ()Ljava/util/Map;
+	public fun hashCode ()I
+	public final fun resolvedSkipOffset ()Ljava/lang/Double;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$MediaFile {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Delivery;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ZZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Delivery;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ZZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Z
+	public final fun component11 ()Z
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lcom/kinodaran/vast/core/VastAd$Delivery;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6 ()Ljava/lang/Integer;
+	public final fun component7 ()Ljava/lang/Integer;
+	public final fun component8 ()Ljava/lang/Integer;
+	public final fun component9 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Delivery;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ZZLjava/lang/String;)Lcom/kinodaran/vast/core/VastAd$MediaFile;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$MediaFile;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/kinodaran/vast/core/VastAd$Delivery;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ZZLjava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$MediaFile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBitrate ()Ljava/lang/Integer;
+	public final fun getCodec ()Ljava/lang/String;
+	public final fun getDelivery ()Lcom/kinodaran/vast/core/VastAd$Delivery;
+	public final fun getHeight ()Ljava/lang/Integer;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMaintainAspectRatio ()Z
+	public final fun getMaxBitrate ()Ljava/lang/Integer;
+	public final fun getMimeType ()Ljava/lang/String;
+	public final fun getMinBitrate ()Ljava/lang/Integer;
+	public final fun getScalable ()Z
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun getWidth ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$Pricing {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;D)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()D
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;D)Lcom/kinodaran/vast/core/VastAd$Pricing;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$Pricing;Ljava/lang/String;Ljava/lang/String;DILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$Pricing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurrency ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getValue ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$ProgressEvent {
+	public fun <init> (Lcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/lang/String;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastAd$SkipOffset;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastAd$ProgressEvent;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$ProgressEvent;Lcom/kinodaran/vast/core/VastAd$SkipOffset;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$ProgressEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOffset ()Lcom/kinodaran/vast/core/VastAd$SkipOffset;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kinodaran/vast/core/VastAd$SkipOffset {
+	public abstract fun seconds (D)D
+}
+
+public final class com/kinodaran/vast/core/VastAd$SkipOffset$Percent : com/kinodaran/vast/core/VastAd$SkipOffset {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/kinodaran/vast/core/VastAd$SkipOffset$Percent;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$SkipOffset$Percent;DILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$SkipOffset$Percent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPercent ()D
+	public fun hashCode ()I
+	public fun seconds (D)D
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$SkipOffset$Time : com/kinodaran/vast/core/VastAd$SkipOffset {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/kinodaran/vast/core/VastAd$SkipOffset$Time;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$SkipOffset$Time;DILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$SkipOffset$Time;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSeconds ()D
+	public fun hashCode ()I
+	public fun seconds (D)D
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$UniversalAdId {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastAd$UniversalAdId;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$UniversalAdId;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$UniversalAdId;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRegistry ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastAd$ViewableImpression {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lcom/kinodaran/vast/core/VastAd$ViewableImpression;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastAd$ViewableImpression;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastAd$ViewableImpression;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getNotViewable ()Ljava/util/List;
+	public final fun getViewUndetermined ()Ljava/util/List;
+	public final fun getViewable ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isEmpty ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon {
+	public fun <init> (Lcom/kinodaran/vast/core/VastBeacon$Kind;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastBeacon$Kind;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lcom/kinodaran/vast/core/VastBeacon$Kind;Ljava/lang/String;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastBeacon;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastBeacon;Lcom/kinodaran/vast/core/VastBeacon$Kind;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastBeacon;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdId ()Ljava/lang/String;
+	public final fun getKind ()Lcom/kinodaran/vast/core/VastBeacon$Kind;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kinodaran/vast/core/VastBeacon$Kind {
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$ClickTracking : com/kinodaran/vast/core/VastBeacon$Kind {
+	public static final field INSTANCE Lcom/kinodaran/vast/core/VastBeacon$Kind$ClickTracking;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$CustomClick : com/kinodaran/vast/core/VastBeacon$Kind {
+	public static final field INSTANCE Lcom/kinodaran/vast/core/VastBeacon$Kind$CustomClick;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$Error : com/kinodaran/vast/core/VastBeacon$Kind {
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastError;
+	public final fun copy (Lcom/kinodaran/vast/core/VastError;)Lcom/kinodaran/vast/core/VastBeacon$Kind$Error;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastBeacon$Kind$Error;Lcom/kinodaran/vast/core/VastError;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastBeacon$Kind$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/kinodaran/vast/core/VastError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$Impression : com/kinodaran/vast/core/VastBeacon$Kind {
+	public static final field INSTANCE Lcom/kinodaran/vast/core/VastBeacon$Kind$Impression;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$Progress : com/kinodaran/vast/core/VastBeacon$Kind {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/kinodaran/vast/core/VastBeacon$Kind$Progress;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastBeacon$Kind$Progress;DILjava/lang/Object;)Lcom/kinodaran/vast/core/VastBeacon$Kind$Progress;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOffset ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$Tracking : com/kinodaran/vast/core/VastBeacon$Kind {
+	public fun <init> (Lcom/kinodaran/vast/core/VastTrackingEvent;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public final fun copy (Lcom/kinodaran/vast/core/VastTrackingEvent;)Lcom/kinodaran/vast/core/VastBeacon$Kind$Tracking;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastBeacon$Kind$Tracking;Lcom/kinodaran/vast/core/VastTrackingEvent;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastBeacon$Kind$Tracking;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvent ()Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$VerificationNotExecuted : com/kinodaran/vast/core/VastBeacon$Kind {
+	public fun <init> (Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public final fun copy (Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;)Lcom/kinodaran/vast/core/VastBeacon$Kind$VerificationNotExecuted;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastBeacon$Kind$VerificationNotExecuted;Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastBeacon$Kind$VerificationNotExecuted;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastBeacon$Kind$ViewUndetermined : com/kinodaran/vast/core/VastBeacon$Kind {
+	public static final field INSTANCE Lcom/kinodaran/vast/core/VastBeacon$Kind$ViewUndetermined;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastDocument {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastDocument;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastDocument;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastDocument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()Ljava/util/List;
+	public final fun getNoAdError ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isNoAd ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kinodaran/vast/core/VastDocument$Body {
+}
+
+public final class com/kinodaran/vast/core/VastDocument$Body$InLine : com/kinodaran/vast/core/VastDocument$Body {
+	public fun <init> (Lcom/kinodaran/vast/core/VastAd;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastAd;
+	public final fun copy (Lcom/kinodaran/vast/core/VastAd;)Lcom/kinodaran/vast/core/VastDocument$Body$InLine;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastDocument$Body$InLine;Lcom/kinodaran/vast/core/VastAd;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastDocument$Body$InLine;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAd ()Lcom/kinodaran/vast/core/VastAd;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastDocument$Body$UnplayableCreative : com/kinodaran/vast/core/VastDocument$Body {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/kinodaran/vast/core/VastDocument$Body$UnplayableCreative;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastDocument$Body$UnplayableCreative;Ljava/util/List;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastDocument$Body$UnplayableCreative;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrors ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastDocument$Body$Wrapper : com/kinodaran/vast/core/VastDocument$Body {
+	public fun <init> (Lcom/kinodaran/vast/core/VastDocument$Wrapper;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastDocument$Wrapper;
+	public final fun copy (Lcom/kinodaran/vast/core/VastDocument$Wrapper;)Lcom/kinodaran/vast/core/VastDocument$Body$Wrapper;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastDocument$Body$Wrapper;Lcom/kinodaran/vast/core/VastDocument$Wrapper;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastDocument$Body$Wrapper;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getWrapper ()Lcom/kinodaran/vast/core/VastDocument$Wrapper;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastDocument$Entry {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lcom/kinodaran/vast/core/VastDocument$Body;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Lcom/kinodaran/vast/core/VastDocument$Body;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Lcom/kinodaran/vast/core/VastDocument$Body;)Lcom/kinodaran/vast/core/VastDocument$Entry;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastDocument$Entry;Ljava/lang/String;Ljava/lang/Integer;Lcom/kinodaran/vast/core/VastDocument$Body;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastDocument$Entry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBody ()Lcom/kinodaran/vast/core/VastDocument$Body;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getSequence ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastDocument$Wrapper {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;ZZLjava/lang/Boolean;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Z
+	public final fun component11 ()Z
+	public final fun component12 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Lcom/kinodaran/vast/core/VastAd$ViewableImpression;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;ZZLjava/lang/Boolean;)Lcom/kinodaran/vast/core/VastDocument$Wrapper;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastDocument$Wrapper;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lcom/kinodaran/vast/core/VastAd$ViewableImpression;ZZLjava/lang/Boolean;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastDocument$Wrapper;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowMultipleAds ()Z
+	public final fun getClickThrough ()Ljava/lang/String;
+	public final fun getClickTracking ()Ljava/util/List;
+	public final fun getErrors ()Ljava/util/List;
+	public final fun getExtensions ()Ljava/util/List;
+	public final fun getFallbackOnNoAd ()Ljava/lang/Boolean;
+	public final fun getFollowAdditionalWrappers ()Z
+	public final fun getImpressions ()Ljava/util/List;
+	public final fun getTagUri ()Ljava/lang/String;
+	public final fun getTrackingEvents ()Ljava/util/Map;
+	public final fun getVerifications ()Ljava/util/List;
+	public final fun getViewableImpression ()Lcom/kinodaran/vast/core/VastAd$ViewableImpression;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastError : java/lang/Enum {
+	public static final field AD_BREAK_SHORTENED Lcom/kinodaran/vast/core/VastError;
+	public static final field AD_CATEGORY_BLOCKED Lcom/kinodaran/vast/core/VastError;
+	public static final field AD_CATEGORY_MISSING Lcom/kinodaran/vast/core/VastError;
+	public static final field COMPANION_DIMENSIONS Lcom/kinodaran/vast/core/VastError;
+	public static final field COMPANION_FETCH_FAILED Lcom/kinodaran/vast/core/VastError;
+	public static final field COMPANION_GENERAL Lcom/kinodaran/vast/core/VastError;
+	public static final field COMPANION_REQUIRED_NOT_SHOWN Lcom/kinodaran/vast/core/VastError;
+	public static final field COMPANION_UNSUPPORTED_TYPE Lcom/kinodaran/vast/core/VastError;
+	public static final field CONDITIONAL_AD_REJECTED Lcom/kinodaran/vast/core/VastError;
+	public static final field Companion Lcom/kinodaran/vast/core/VastError$Companion;
+	public static final field INTERACTIVE_CREATIVE_FILE Lcom/kinodaran/vast/core/VastError;
+	public static final field INTERACTIVE_UNIT_NOT_EXECUTED Lcom/kinodaran/vast/core/VastError;
+	public static final field IN_LINE_TIMEOUT Lcom/kinodaran/vast/core/VastError;
+	public static final field LINEAR_GENERAL Lcom/kinodaran/vast/core/VastError;
+	public static final field MEDIA_FILE_DISPLAY_PROBLEM Lcom/kinodaran/vast/core/VastError;
+	public static final field MEDIA_FILE_NOT_FOUND Lcom/kinodaran/vast/core/VastError;
+	public static final field MEDIA_FILE_TIMEOUT Lcom/kinodaran/vast/core/VastError;
+	public static final field MEZZANINE_BELOW_SPEC Lcom/kinodaran/vast/core/VastError;
+	public static final field MEZZANINE_DOWNLOADING Lcom/kinodaran/vast/core/VastError;
+	public static final field MEZZANINE_MISSING Lcom/kinodaran/vast/core/VastError;
+	public static final field NON_LINEAR_DIMENSIONS Lcom/kinodaran/vast/core/VastError;
+	public static final field NON_LINEAR_FETCH_FAILED Lcom/kinodaran/vast/core/VastError;
+	public static final field NON_LINEAR_GENERAL Lcom/kinodaran/vast/core/VastError;
+	public static final field NON_LINEAR_UNSUPPORTED_TYPE Lcom/kinodaran/vast/core/VastError;
+	public static final field NO_SUPPORTED_MEDIA_FILE Lcom/kinodaran/vast/core/VastError;
+	public static final field NO_VAST_RESPONSE_AFTER_WRAPPERS Lcom/kinodaran/vast/core/VastError;
+	public static final field SCHEMA_VALIDATION Lcom/kinodaran/vast/core/VastError;
+	public static final field TRAFFICKING Lcom/kinodaran/vast/core/VastError;
+	public static final field UNDEFINED Lcom/kinodaran/vast/core/VastError;
+	public static final field UNEXPECTED_DURATION Lcom/kinodaran/vast/core/VastError;
+	public static final field UNEXPECTED_LINEARITY Lcom/kinodaran/vast/core/VastError;
+	public static final field UNEXPECTED_SIZE Lcom/kinodaran/vast/core/VastError;
+	public static final field VERIFICATION_NOT_EXECUTED Lcom/kinodaran/vast/core/VastError;
+	public static final field VERSION_NOT_SUPPORTED Lcom/kinodaran/vast/core/VastError;
+	public static final field VPAID_GENERAL Lcom/kinodaran/vast/core/VastError;
+	public static final field WRAPPER_GENERAL Lcom/kinodaran/vast/core/VastError;
+	public static final field WRAPPER_LIMIT_REACHED Lcom/kinodaran/vast/core/VastError;
+	public static final field WRAPPER_TIMEOUT Lcom/kinodaran/vast/core/VastError;
+	public static final field XML_PARSING Lcom/kinodaran/vast/core/VastError;
+	public final fun getCode ()I
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastError;
+	public static fun values ()[Lcom/kinodaran/vast/core/VastError;
+}
+
+public final class com/kinodaran/vast/core/VastError$Companion {
+	public final fun fromCode (I)Lcom/kinodaran/vast/core/VastError;
+}
+
+public final class com/kinodaran/vast/core/VastException : java/lang/Exception {
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;)V
+	public final fun getError ()Lcom/kinodaran/vast/core/VastError;
+}
+
+public final class com/kinodaran/vast/core/VastMacroExpander {
+	public static final field Companion Lcom/kinodaran/vast/core/VastMacroExpander$Companion;
+	public static final field WITHHELD_VALUE Ljava/lang/String;
+	public fun <init> ()V
+	public final fun expand (Ljava/lang/String;Lcom/kinodaran/vast/core/VastMacroExpander$Context;)Ljava/lang/String;
+	public final fun expandUrl (Ljava/lang/String;Lcom/kinodaran/vast/core/VastMacroExpander$Context;)Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastMacroExpander$Companion {
+}
+
+public final class com/kinodaran/vast/core/VastMacroExpander$Context {
+	public fun <init> ()V
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Lcom/kinodaran/vast/core/VastMacroExpander$Size;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Lcom/kinodaran/vast/core/VastMacroValues;Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Lcom/kinodaran/vast/core/VastError;Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Lcom/kinodaran/vast/core/VastMacroExpander$Size;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Lcom/kinodaran/vast/core/VastMacroValues;Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastError;
+	public final fun component10 ()Ljava/lang/Boolean;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/util/List;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component14 ()Ljava/util/Map;
+	public final fun component15 ()Lcom/kinodaran/vast/core/VastMacroValues;
+	public final fun component16 ()Ljava/lang/String;
+	public final fun component17 ()Ljava/lang/String;
+	public final fun component18 ()Z
+	public final fun component2 ()Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Long;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Lcom/kinodaran/vast/core/VastMacroExpander$Size;
+	public final fun component9 ()Ljava/lang/Boolean;
+	public final fun copy (Lcom/kinodaran/vast/core/VastError;Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Lcom/kinodaran/vast/core/VastMacroExpander$Size;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Lcom/kinodaran/vast/core/VastMacroValues;Ljava/lang/String;Ljava/lang/String;Z)Lcom/kinodaran/vast/core/VastMacroExpander$Context;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastMacroExpander$Context;Lcom/kinodaran/vast/core/VastError;Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Lcom/kinodaran/vast/core/VastMacroExpander$Size;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Lcom/kinodaran/vast/core/VastMacroValues;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lcom/kinodaran/vast/core/VastMacroExpander$Context;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdPlayhead ()Ljava/lang/Double;
+	public final fun getAppBundle ()Ljava/lang/String;
+	public final fun getAssetUri ()Ljava/lang/String;
+	public final fun getCacheBuster ()Ljava/lang/String;
+	public final fun getContentPlayhead ()Ljava/lang/Double;
+	public final fun getCustom ()Ljava/util/Map;
+	public final fun getErrorCode ()Lcom/kinodaran/vast/core/VastError;
+	public final fun getExecutesOmid ()Z
+	public final fun getHost ()Lcom/kinodaran/vast/core/VastMacroValues;
+	public final fun getMediaMimeType ()Ljava/lang/String;
+	public final fun getOmidPartner ()Ljava/lang/String;
+	public final fun getPlayerSize ()Lcom/kinodaran/vast/core/VastMacroExpander$Size;
+	public final fun getTimestampMillis ()Ljava/lang/Long;
+	public final fun getTransactionId ()Ljava/lang/String;
+	public final fun getVerificationNotExecutedReason ()Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public final fun getVerificationVendors ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isFullscreen ()Ljava/lang/Boolean;
+	public final fun isMuted ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastMacroExpander$Size {
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lcom/kinodaran/vast/core/VastMacroExpander$Size;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastMacroExpander$Size;IIILjava/lang/Object;)Lcom/kinodaran/vast/core/VastMacroExpander$Size;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeight ()I
+	public final fun getWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastMacroValues {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Boolean;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/Integer;
+	public final fun component8 ()Ljava/lang/Integer;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lcom/kinodaran/vast/core/VastMacroValues;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastMacroValues;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastMacroValues;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBreakPosition ()Ljava/lang/Integer;
+	public final fun getContentId ()Ljava/lang/String;
+	public final fun getContentUri ()Ljava/lang/String;
+	public final fun getCustom ()Ljava/util/Map;
+	public final fun getDeviceUserAgent ()Ljava/lang/String;
+	public final fun getGdprConsent ()Ljava/lang/String;
+	public final fun getIdentifierForAdvertising ()Ljava/lang/String;
+	public final fun getIdentifierType ()Ljava/lang/String;
+	public final fun getLimitsAdTracking ()Ljava/lang/Boolean;
+	public final fun getPlacementType ()Ljava/lang/Integer;
+	public final fun getRegulations ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastMediaFileSelector {
+	public fun <init> ()V
+	public final fun select (Ljava/util/List;Lcom/kinodaran/vast/core/VastMediaFileSelector$Capabilities;)Lcom/kinodaran/vast/core/VastAd$MediaFile;
+}
+
+public final class com/kinodaran/vast/core/VastMediaFileSelector$Capabilities {
+	public static final field Companion Lcom/kinodaran/vast/core/VastMediaFileSelector$Capabilities$Companion;
+	public fun <init> (IILjava/util/Set;Ljava/lang/Integer;Z)V
+	public synthetic fun <init> (IILjava/util/Set;Ljava/lang/Integer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Ljava/lang/Integer;
+	public final fun component5 ()Z
+	public final fun copy (IILjava/util/Set;Ljava/lang/Integer;Z)Lcom/kinodaran/vast/core/VastMediaFileSelector$Capabilities;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastMediaFileSelector$Capabilities;IILjava/util/Set;Ljava/lang/Integer;ZILjava/lang/Object;)Lcom/kinodaran/vast/core/VastMediaFileSelector$Capabilities;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeight ()I
+	public final fun getPreferredBitrate ()Ljava/lang/Integer;
+	public final fun getSupportedMimeTypes ()Ljava/util/Set;
+	public final fun getSupportsStreaming ()Z
+	public final fun getWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastMediaFileSelector$Capabilities$Companion {
+	public final fun getMEDIA3_DEFAULTS ()Ljava/util/Set;
+}
+
+public final class com/kinodaran/vast/core/VastParser {
+	public fun <init> ()V
+	public final fun parse (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastDocument;
+}
+
+public final class com/kinodaran/vast/core/VastPodScheduler {
+	public fun <init> (Ljava/util/List;)V
+	public final fun getCurrentIndex ()I
+	public final fun getTotalCount ()I
+	public final fun next ()Lcom/kinodaran/vast/core/VastAd;
+	public final fun peek ()Lcom/kinodaran/vast/core/VastAd;
+	public final fun substituteForFailure ()Lcom/kinodaran/vast/core/VastAd;
+}
+
+public abstract interface class com/kinodaran/vast/core/VastResourceLoader {
+	public abstract fun loadVast (Ljava/lang/String;DLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kinodaran/vast/core/VastTagResolver {
+	public fun <init> (Lcom/kinodaran/vast/core/VastResourceLoader;ID)V
+	public synthetic fun <init> (Lcom/kinodaran/vast/core/VastResourceLoader;IDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun resolveTag (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolveXml (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resolveXml$default (Lcom/kinodaran/vast/core/VastTagResolver;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kinodaran/vast/core/VastTagResolver$Failure : java/lang/Exception {
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;Ljava/util/List;)V
+	public final fun getBeacons ()Ljava/util/List;
+	public final fun getError ()Lcom/kinodaran/vast/core/VastError;
+}
+
+public final class com/kinodaran/vast/core/VastTagResolver$Resolution {
+	public fun <init> (Ljava/util/List;Lcom/kinodaran/vast/core/VastWrapperChain;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lcom/kinodaran/vast/core/VastWrapperChain;
+	public final fun copy (Ljava/util/List;Lcom/kinodaran/vast/core/VastWrapperChain;)Lcom/kinodaran/vast/core/VastTagResolver$Resolution;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastTagResolver$Resolution;Ljava/util/List;Lcom/kinodaran/vast/core/VastWrapperChain;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastTagResolver$Resolution;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAds ()Ljava/util/List;
+	public final fun getChain ()Lcom/kinodaran/vast/core/VastWrapperChain;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastTick {
+	public fun <init> (DLjava/lang/Double;FDZZ)V
+	public synthetic fun <init> (DLjava/lang/Double;FDZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Ljava/lang/Double;
+	public final fun component3 ()F
+	public final fun component4 ()D
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun copy (DLjava/lang/Double;FDZZ)Lcom/kinodaran/vast/core/VastTick;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastTick;DLjava/lang/Double;FDZZILjava/lang/Object;)Lcom/kinodaran/vast/core/VastTick;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdTime ()D
+	public final fun getDuration ()Ljava/lang/Double;
+	public final fun getItemIsOurs ()Z
+	public final fun getRate ()F
+	public final fun getWallClock ()D
+	public fun hashCode ()I
+	public final fun isMuted ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastTrackingEngine {
+	public static final field COMPLETION_THRESHOLD D
+	public static final field Companion Lcom/kinodaran/vast/core/VastTrackingEngine$Companion;
+	public static final field SEEK_TOLERANCE D
+	public static final field SELF_COMPLETION_MARGIN D
+	public fun <init> (Lcom/kinodaran/vast/core/VastAd;Ljava/lang/Double;Z)V
+	public synthetic fun <init> (Lcom/kinodaran/vast/core/VastAd;Ljava/lang/Double;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun advance (Lcom/kinodaran/vast/core/VastTick;)Ljava/util/List;
+	public final fun creativeDidLoad ()Ljava/util/List;
+	public final fun fail (Lcom/kinodaran/vast/core/VastError;)Ljava/util/List;
+	public final fun getDuration ()D
+	public final fun getWatched ()D
+	public final fun isFinished ()Z
+	public final fun playbackDidReachEnd ()Ljava/util/List;
+	public final fun playbackDidStall ()Ljava/util/List;
+	public final fun report (Lcom/kinodaran/vast/core/VastTrackingEvent;)Ljava/util/List;
+	public final fun reportCustomClick ()Ljava/util/List;
+	public final fun userDidSkip ()Ljava/util/List;
+}
+
+public final class com/kinodaran/vast/core/VastTrackingEngine$Companion {
+}
+
+public final class com/kinodaran/vast/core/VastTrackingEvent : java/lang/Enum {
+	public static final field ACCEPT_INVITATION Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field CLOSE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field CLOSE_LINEAR Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field COLLAPSE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field COMPLETE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field CREATIVE_VIEW Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field Companion Lcom/kinodaran/vast/core/VastTrackingEvent$Companion;
+	public static final field EXIT_FULLSCREEN Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field EXPAND Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field FIRST_QUARTILE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field FULLSCREEN Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field LOADED Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field MIDPOINT Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field MUTE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field NOT_USED Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field OTHER_AD_INTERACTION Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field PAUSE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field PLAYER_COLLAPSE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field PLAYER_EXPAND Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field RESUME Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field REWIND Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field SKIP Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field START Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field THIRD_QUARTILE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static final field UNMUTE Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getEquivalents ()Ljava/util/List;
+	public final fun getRequiresContinuousPlayback ()Z
+	public final fun getVastName ()Ljava/lang/String;
+	public final fun isHostReportable ()Z
+	public final fun isOnce ()Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastTrackingEvent;
+	public static fun values ()[Lcom/kinodaran/vast/core/VastTrackingEvent;
+}
+
+public final class com/kinodaran/vast/core/VastTrackingEvent$Companion {
+	public final fun fromVastName (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastTrackingEvent;
+}
+
+public final class com/kinodaran/vast/core/VastVerification {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)Lcom/kinodaran/vast/core/VastVerification;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastVerification;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastVerification;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNotExecutedTrackers ()Ljava/util/List;
+	public final fun getOmidResource ()Lcom/kinodaran/vast/core/VastVerification$Resource;
+	public final fun getParameters ()Ljava/lang/String;
+	public final fun getResources ()Ljava/util/List;
+	public final fun getVendor ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastVerification$NotExecutedReason : java/lang/Enum {
+	public static final field NOT_EXECUTED Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public static final field RESOURCE_LOAD_ERROR Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public static final field RESOURCE_NOT_SUPPORTED Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public final fun getCode ()I
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+	public static fun values ()[Lcom/kinodaran/vast/core/VastVerification$NotExecutedReason;
+}
+
+public final class com/kinodaran/vast/core/VastVerification$Resource {
+	public fun <init> (Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;)V
+	public synthetic fun <init> (Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;)Lcom/kinodaran/vast/core/VastVerification$Resource;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastVerification$Resource;Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastVerification$Resource;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiFramework ()Ljava/lang/String;
+	public final fun getBrowserOptional ()Z
+	public final fun getKind ()Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;
+	public final fun getType ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isOmid ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastVerification$Resource$Kind : java/lang/Enum {
+	public static final field EXECUTABLE Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;
+	public static final field JAVA_SCRIPT Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;
+	public static fun values ()[Lcom/kinodaran/vast/core/VastVerification$Resource$Kind;
+}
+
+public final class com/kinodaran/vast/core/VastVersion {
+	public static final field CURRENT Ljava/lang/String;
+	public static final field INSTANCE Lcom/kinodaran/vast/core/VastVersion;
+}
+
+public final class com/kinodaran/vast/core/VastWrapperChain {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun accept (Lcom/kinodaran/vast/core/VastDocument;Ljava/lang/String;)Lcom/kinodaran/vast/core/VastWrapperChain$Step;
+	public static synthetic fun accept$default (Lcom/kinodaran/vast/core/VastWrapperChain;Lcom/kinodaran/vast/core/VastDocument;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastWrapperChain$Step;
+	public final fun errorBeacons (Lcom/kinodaran/vast/core/VastError;Ljava/lang/String;)Ljava/util/List;
+	public static synthetic fun errorBeacons$default (Lcom/kinodaran/vast/core/VastWrapperChain;Lcom/kinodaran/vast/core/VastError;Ljava/lang/String;ILjava/lang/Object;)Ljava/util/List;
+	public final fun getAccumulatedErrors ()Ljava/util/List;
+	public final fun getDepth ()I
+	public final fun getMaxDepth ()I
+}
+
+public abstract interface class com/kinodaran/vast/core/VastWrapperChain$Step {
+}
+
+public final class com/kinodaran/vast/core/VastWrapperChain$Step$Failed : com/kinodaran/vast/core/VastWrapperChain$Step {
+	public fun <init> (Lcom/kinodaran/vast/core/VastError;)V
+	public final fun component1 ()Lcom/kinodaran/vast/core/VastError;
+	public final fun copy (Lcom/kinodaran/vast/core/VastError;)Lcom/kinodaran/vast/core/VastWrapperChain$Step$Failed;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastWrapperChain$Step$Failed;Lcom/kinodaran/vast/core/VastError;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastWrapperChain$Step$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/kinodaran/vast/core/VastError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastWrapperChain$Step$Follow : com/kinodaran/vast/core/VastWrapperChain$Step {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/kinodaran/vast/core/VastWrapperChain$Step$Follow;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastWrapperChain$Step$Follow;Ljava/lang/String;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastWrapperChain$Step$Follow;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kinodaran/vast/core/VastWrapperChain$Step$Resolved : com/kinodaran/vast/core/VastWrapperChain$Step {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/kinodaran/vast/core/VastWrapperChain$Step$Resolved;
+	public static synthetic fun copy$default (Lcom/kinodaran/vast/core/VastWrapperChain$Step$Resolved;Ljava/util/List;ILjava/lang/Object;)Lcom/kinodaran/vast/core/VastWrapperChain$Step$Resolved;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAds ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -231,10 +232,14 @@ private fun Skip(session: VastAdSession, slot: (@Composable (Double?) -> Unit)?,
     }
 
     if (canSkip) {
+        // Focus has to read from across a room: a yellow ring in the badge's colour,
+        // not a shade of white that differs from the unfocused one by a few percent.
+        val shape = RoundedCornerShape(24.dp)
         Box(
             control
                 .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-                .background(if (focused) Color.White else Color(0xE6FFFFFF), RoundedCornerShape(24.dp))
+                .background(if (focused) Color.White else Color(0xE6FFFFFF), shape)
+                .border(if (focused) 3.dp else 0.dp, if (focused) Color(0xFFFFCC00) else Color.Transparent, shape)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center,
         ) {

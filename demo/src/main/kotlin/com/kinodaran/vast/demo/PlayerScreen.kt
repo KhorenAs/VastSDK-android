@@ -3,6 +3,7 @@ package com.kinodaran.vast.demo
 import android.app.PictureInPictureParams
 import android.graphics.Rect
 import android.os.Build
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.util.Rational
 import androidx.activity.ComponentActivity
@@ -120,6 +121,9 @@ fun PlayerScreen(scenario: DemoScenario, onClose: () -> Unit) {
     val activity = context as ComponentActivity
     val inPictureInPicture by session.isInPictureInPicture.collectAsState()
     val permitsPictureInPicture by session.permitsPictureInPicture.collectAsState()
+    // Not every device has the window: most televisions, this emulator's among them,
+    // do not, and there entering it does nothing.
+    val supportsPictureInPicture = remember(context) { context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) }
     var stageBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     val pendingBreaks by session.pendingBreakCount.collectAsState()
     var inserted by remember { mutableIntStateOf(0) }
@@ -148,10 +152,13 @@ fun PlayerScreen(scenario: DemoScenario, onClose: () -> Unit) {
     // means it. The player stays at the same place in the composition either way:
     // moved to another parent it would get a new surface, and a playing video
     // handed a new surface mid-stream shows black until something redraws it.
-    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE || inPictureInPicture
+    // A television is always landscape and has nowhere else to put the buttons,
+    // so it keeps them under the player instead.
+    val television = isTelevision()
+    val landscape = (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE && !television) || inPictureInPicture
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
         Box(
-            (if (landscape) Modifier.weight(1f).fillMaxWidth() else Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+            (if (landscape || television) Modifier.weight(1f).fillMaxWidth() else Modifier.fillMaxWidth().aspectRatio(16f / 9f))
                 .background(Color.Black)
                 .onGloballyPositioned { stageBounds = it.boundsInWindow() },
         ) {
@@ -171,13 +178,14 @@ fun PlayerScreen(scenario: DemoScenario, onClose: () -> Unit) {
             }) { Text(if (pendingBreaks > 0) "Insert ad ($pendingBreaks waiting)" else "Insert ad") }
             // Offered only when the session says the window is allowed — under
             // SUSPENDED it is not, for the length of the break.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && supportsPictureInPicture) {
                 TextButton(
                     onClick = { activity.enterPictureInPictureMode(pictureInPictureParams(stageBounds, permitsPictureInPicture)) },
                     enabled = permitsPictureInPicture,
                 ) { Text("Picture in Picture") }
             }
         }
+        if (television) return@Column
         Text(scenario.title, Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.titleMedium)
         LazyColumn(Modifier.fillMaxSize().padding(16.dp)) {
             items(log) { Text(it, style = MaterialTheme.typography.bodySmall) }

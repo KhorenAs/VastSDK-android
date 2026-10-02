@@ -395,6 +395,17 @@ class VastAdsLoaderTest {
             override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
                 heard += "next ${availableCommands.contains(Player.COMMAND_SEEK_TO_NEXT)}"
             }
+
+            // Every other callback has to come through too: a MediaSession that never
+            // hears the player start shows "buffering" for ever, and its play/pause
+            // key does nothing.
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                heard += "playing $isPlaying"
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                heard += "state $playbackState"
+            }
         })
         start(session)
         runUntil { session.state.value == VastAdState.Playing && player.isPlayingAd }
@@ -412,6 +423,8 @@ class VastAdsLoaderTest {
         assertTrue(controls.mediaMetadata.title?.toString() != "Advertisement")
         assertTrue("title Advertisement" in heard, heard.toString())
         assertTrue("next false" in heard, heard.toString())
+        assertTrue("playing true" in heard, "the player's own callbacks did not come through: $heard")
+        assertTrue("state ${Player.STATE_ENDED}" in heard, heard.toString())
     }
 
     // MARK: - Speed

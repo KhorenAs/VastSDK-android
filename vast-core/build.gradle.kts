@@ -5,11 +5,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // on the JVM in seconds.
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    `maven-publish`
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
 }
 
 kotlin {
@@ -17,6 +19,10 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
     }
+    // The public API, written down: any change to it shows up in the diff of
+    // api/vast-core.api, and `check` fails until the dump is updated on purpose.
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    abiValidation()
 }
 
 dependencies {
@@ -25,4 +31,13 @@ dependencies {
     // The resolver is suspending; the tests drive it with runBlocking. The
     // library itself needs no coroutine runtime, only the language feature.
     testImplementation(libs.kotlinx.coroutines.core)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            artifactId = "vast-core"
+            from(components["java"])
+        }
+    }
 }
