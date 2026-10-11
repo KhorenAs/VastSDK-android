@@ -2,8 +2,8 @@
 # @UnstableApi, which may change between minor releases, so it moves only on
 # purpose and with the adapter's tests run against the new version.
 [versions]
-agp = "9.4.1"
-kotlin = "2.4.20"
+agp = "9.2.1"
+kotlin = "2.4.21"
 coroutines = "1.11.0"
 media3 = "1.11.1"
 composeBom = "2026.09.00"
@@ -11,7 +11,7 @@ activityCompose = "1.13.0"
 # What Compose already brings a host, so the SDK asks for no upgrade.
 lifecycle = "2.9.4"
 # The floor the SDK needs (the Picture in Picture listener), not a version it imposes.
-androidxCore = "1.9.0"
+androidxCore = "1.19.1"
 junit = "4.13.2"
 robolectric = "4.17"
 androidxTestCore = "1.7.0"

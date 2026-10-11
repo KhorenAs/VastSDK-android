@@ -131,6 +131,7 @@ public class VastMacroExpander {
     private fun replacement(name: String, context: Context): String? {
         context.custom[name]?.let { return encode(it) }
         val host = context.host
+        host.custom[name]?.let { return encode(it) }
 
         return when (name) {
             "ERRORCODE" -> context.errorCode?.code?.toString() ?: UNKNOWN_VALUE

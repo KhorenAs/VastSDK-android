@@ -86,7 +86,7 @@ public class VastTrackingEngine(
             beacons += quartileBeacons()
             beacons += progressBeacons()
 
-            if (duration > 0 && watched >= duration - SELF_COMPLETION_MARGIN) {
+            if (duration > 0 && watched >= max(duration - SELF_COMPLETION_MARGIN, duration * COMPLETION_THRESHOLD)) {
                 beacons += finish()
             }
         } finally {
