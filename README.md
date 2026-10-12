@@ -32,7 +32,7 @@ to three places; take whichever suits the host.
 there ([PUBLISHING.md](PUBLISHING.md)):
 
 ```kotlin
-implementation("com.kinodaran.vast:vast-compose:0.1.0")
+implementation("com.kinodaran.vast:vast-compose:0.1.1")
 ```
 
 **GitHub Packages** — the same coordinates. GitHub asks for a token with
@@ -55,7 +55,7 @@ maven("https://maven.pkg.github.com/KhorenAs/VastSDK-android") {
 maven("https://jitpack.io")
 
 // build.gradle.kts
-implementation("com.github.KhorenAs.VastSDK-android:vast-compose:v0.1.0")
+implementation("com.github.KhorenAs.VastSDK-android:vast-compose:v0.1.1")
 ```
 
 Requirements: Android 7.0 (API 24) · Media3 1.11 · Jetpack Compose · Kotlin 2.4.

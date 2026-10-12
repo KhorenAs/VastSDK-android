@@ -17,7 +17,7 @@ allprojects {
     // repository does not have, so on JitPack the build takes JitPack's names.
     val jitpack = System.getenv("JITPACK") == "true"
     group = if (jitpack) "com.github.KhorenAs.VastSDK-android" else "com.kinodaran.vast"
-    version = if (jitpack) System.getenv("VERSION") else "0.1.0"
+    version = if (jitpack) System.getenv("VERSION") else "0.1.1"
 }
 
 // detekt on every module, from one config that lists only what differs from the
