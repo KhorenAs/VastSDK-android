@@ -270,4 +270,16 @@ class VastMacroExpanderTest {
         )
         assertEquals("https://ads.test/i?own=%5BCORRELATOR%5D", expander.expandUrl("https://ads.test/i?own=%5BCORRELATOR%5D", Context()))
     }
+    @Test
+    fun vendorMacrosInTheSessionHostValuesAreExpanded() {
+        val context = Context(host = VastMacroValues(custom = mapOf("kinodaran_request_id" to "a b")))
+        assertEquals("https://ads.test/a%20b", expander.expand("https://ads.test/[kinodaran_request_id]", context))
+    }
+
+    @Test
+    fun perExpansionVendorValuesOverrideSessionHostValues() {
+        val context = Context(custom = mapOf("vendor" to "new"), host = VastMacroValues(custom = mapOf("vendor" to "old")))
+        assertEquals("new", expander.expand("[vendor]", context))
+    }
+
 }

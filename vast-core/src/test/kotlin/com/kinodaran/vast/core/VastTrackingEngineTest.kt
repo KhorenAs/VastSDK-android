@@ -329,4 +329,18 @@ class VastTrackingEngineTest {
         assertEquals(listOf("error 402"), engine.playbackDidStall().map { it.label })
         assertTrue(engine.isFinished)
     }
+    @Test
+    fun aShortCreativeCannotSelfCompleteBeforeItsWatchedThreshold() {
+        val engine = VastTrackingEngine(makeAd(duration = 2.0), duration = 2.0)
+        for (step in 0..9) {
+            val time = step * 0.2
+            val fired = engine.advance(VastTick(adTime = time, duration = 2.0, rate = 1f, wallClock = time))
+            assertFalse(fired.any { it.label == "complete" }, "1.8 seconds is below the 97% completion threshold")
+        }
+        val fired = engine.advance(VastTick(adTime = 1.96, duration = 2.0, rate = 1f, wallClock = 1.96))
+        assertEquals(1, fired.count { it.label == "complete" })
+        assertTrue(engine.watched >= engine.duration * VastTrackingEngine.COMPLETION_THRESHOLD)
+        assertTrue(engine.playbackDidReachEnd().isEmpty())
+    }
+
 }
