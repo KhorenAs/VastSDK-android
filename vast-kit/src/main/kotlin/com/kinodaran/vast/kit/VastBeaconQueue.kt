@@ -30,22 +30,25 @@ public class VastBeaconQueue internal constructor(
     private val now: () -> Long = System::currentTimeMillis,
 ) {
 
-    private class Entry(val recordedMillis: Long, val url: String)
+    /** One held beacon, with the moment it was first recorded — which is what it ages from. */
+    internal data class Entry(val recordedMillis: Long, val url: String)
 
     private val mutex = Mutex()
     private var pending: List<Entry>? = null
 
-    /** Keeps beacons that failed, so the next flush can try again. */
+    /** Keeps beacons that failed their first send, so a later flush can try again. */
     public suspend fun enqueue(urls: List<String>): Unit = mutex.withLock {
-        if (urls.isEmpty()) return@withLock
-        val entries = load()
         val recorded = now()
-        urls.mapTo(entries) { Entry(recorded, it) }
-        val kept = trimmed(entries)
-        pending = kept
-        save(kept)
-        VastLog.notice("holding ${kept.size} beacon(s) for retry")
+        keep(urls.map { Entry(recorded, it) })
     }
+
+    /**
+     * Puts back beacons that were taken and failed again, keeping when each was
+     * first recorded. Re-stamping them would let a tracker that never answers
+     * live in the file for ever, carrying whatever consent string its URL holds
+     * past the age limit meant to drop it.
+     */
+    internal suspend fun requeue(entries: List<Entry>): Unit = mutex.withLock { keep(entries) }
 
     /**
      * Takes everything worth retrying, and forgets it.
@@ -54,15 +57,26 @@ public class VastBeaconQueue internal constructor(
      * point, and re-queues what fails again. Holding on as well would send every
      * beacon twice on every flush for as long as one of them kept failing.
      */
-    public suspend fun drain(): List<String> = mutex.withLock {
+    public suspend fun drain(): List<String> = drainEntries().map { it.url }
+
+    /** [drain], keeping when each beacon was first recorded, for [requeue]. */
+    internal suspend fun drainEntries(): List<Entry> = mutex.withLock {
         val entries = trimmed(load())
         if (entries.isEmpty()) return@withLock emptyList()
         pending = emptyList()
         save(emptyList())
-        entries.map { it.url }
+        entries
     }
 
     public suspend fun count(): Int = mutex.withLock { trimmed(load()).size }
+
+    private fun keep(entries: List<Entry>) {
+        if (entries.isEmpty()) return
+        val kept = trimmed(load().apply { addAll(entries) })
+        pending = kept
+        save(kept)
+        VastLog.notice("holding ${kept.size} beacon(s) for retry")
+    }
 
     // MARK: - Storage
 

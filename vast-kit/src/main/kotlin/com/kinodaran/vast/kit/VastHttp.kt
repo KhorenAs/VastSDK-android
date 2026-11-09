@@ -45,27 +45,37 @@ public class VastHttpTransport(
         if (beacons.isEmpty()) return
         // Earlier failures ride along with current traffic, so a retry costs no
         // timer of its own and happens when the network is known to work.
-        val retries = queue?.drain().orEmpty()
-        deliver(retries + beacons.map { it.url })
+        val retries = queue?.drainEntries().orEmpty()
+        deliver(retries.map { Outgoing(it.url, it) } + beacons.map { Outgoing(it.url, null) })
     }
 
     /** Sends whatever the queue holds, with no new beacon to carry it — at session start, say. */
     public suspend fun flushPending() {
-        val retries = queue?.drain().orEmpty()
-        if (retries.isNotEmpty()) deliver(retries)
+        val retries = queue?.drainEntries().orEmpty()
+        if (retries.isNotEmpty()) deliver(retries.map { Outgoing(it.url, it) })
     }
 
+    /**
+     * What fails goes back to the queue: a first send as new, a retry as the
+     * entry it was taken as — so a beacon that keeps failing still ages out from
+     * when it was first recorded, not from its latest failure.
+     */
     @Suppress("InjectDispatcher") // HttpURLConnection blocks; that belongs on I/O, whatever the caller runs on.
-    private suspend fun deliver(urls: List<String>) {
+    private suspend fun deliver(outgoing: List<Outgoing>) {
         val undelivered = withContext(Dispatchers.IO) {
             coroutineScope {
-                urls.map { url -> async { if (send(url)) null else url } }.awaitAll().filterNotNull()
+                outgoing.map { beacon -> async { if (send(beacon.url)) null else beacon } }.awaitAll().filterNotNull()
             }
         }
         if (undelivered.isEmpty()) return
         VastLog.warning("${undelivered.size} beacon(s) undelivered")
-        queue?.enqueue(undelivered)
+        val queue = queue ?: return
+        queue.enqueue(undelivered.filter { it.queued == null }.map { it.url })
+        queue.requeue(undelivered.mapNotNull { it.queued })
     }
+
+    /** One request to make: `queued` is the entry a retry was taken as, and `null` on a first send. */
+    private class Outgoing(val url: String, val queued: VastBeaconQueue.Entry?)
 
     /** @return whether the beacon landed. */
     private fun send(url: String): Boolean {

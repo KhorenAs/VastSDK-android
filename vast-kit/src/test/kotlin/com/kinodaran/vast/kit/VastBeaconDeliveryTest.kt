@@ -146,6 +146,28 @@ class VastBeaconDeliveryTest {
         assertEquals(0, queue.count())
     }
 
+    /**
+     * A retry that failed again used to be queued as new, so a beacon to a
+     * tracker that never answers was never older than its latest failure: it
+     * stayed for as long as the app kept sending beacons, with whatever consent
+     * string its URL carried.
+     */
+    @Test
+    fun aBeaconThatKeepsFailingAgesOutFromWhenItWasFirstRecorded() = runBlocking {
+        var now = 1_000_000_000L
+        val aging = VastBeaconQueue(File(directory, "aging.tsv")) { now }
+        server.failing += "/blocked"
+        val transport = VastHttpTransport(aging, maxAttempts = 1)
+
+        transport.fire(listOf(beacon(server.url("blocked"))))
+        now += VastBeaconQueue.MAX_AGE_MILLIS - 60_000
+        transport.fire(listOf(beacon(server.url("start"))))
+        now += 120_000
+
+        assertEquals(2, server.requested.count { it == "/blocked" }, "the failure was not retried at all")
+        assertEquals(emptyList(), aging.drain(), "a URL that may carry a consent string outlived MAX_AGE_MILLIS")
+    }
+
     @Test
     fun aMalformedUrlIsDroppedRatherThanCarriedForever() = runBlocking {
         VastHttpTransport(queue, maxAttempts = 1).fire(listOf(beacon("not a url")))
@@ -170,11 +192,15 @@ class VastBeaconDeliveryTest {
     /** A real HTTP server on a loopback port, so "the beacon failed" is a setting rather than a wait. */
     private class Server : AutoCloseable {
         @Volatile var status = 200
+
+        /** Paths that answer 503 whatever [status] says: a tracker that is down while the rest are not. */
+        val failing: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
         val requested: MutableList<String> = Collections.synchronizedList(mutableListOf())
         private val httpServer = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
             createContext("/") { exchange ->
-                requested += exchange.requestURI.path
-                exchange.sendResponseHeaders(status, -1)
+                val path = exchange.requestURI.path
+                requested += path
+                exchange.sendResponseHeaders(if (path in failing) 503 else status, -1)
                 exchange.close()
             }
             start()
