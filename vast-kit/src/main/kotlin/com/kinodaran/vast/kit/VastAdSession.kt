@@ -216,7 +216,12 @@ public class VastAdSession internal constructor(
      */
     private val holds = mutableSetOf<Hold>()
 
-    /** Whether the session paused the player for a hold, and so owes it a restart. */
+    /**
+     * Whether the session paused the player for a hold, and so owes it a
+     * restart. A fact about the player rather than the creative: Media3's
+     * player is shared, so a pause outlives the creative it was put on. Anyone
+     * else starting the player settles it — see [notePlayback].
+     */
     private var heldPlayback = false
 
     private enum class Hold { OFF_SCREEN, PICTURE_IN_PICTURE }
@@ -605,6 +610,14 @@ public class VastAdSession internal constructor(
         lastOutcome = outcome
         listener?.onAdFailed(error, slot.ad)
         if (activeSlot === slot) {
+            // A hold's reasons belong to the creative they were put on, however it
+            // ended: the next one is held again if they still stand. The pause
+            // itself stays owed — Media3's player is shared, so the next creative
+            // or the content inherits it, and dropping the debt here would leave
+            // that one paused for good when the viewer came back. Only the
+            // creative on screen: Media3 prepares the next one while this one
+            // plays, and that one can fail first.
+            holds.clear()
             listener?.onAdFinished(slot.ad, outcome)
             measurement?.finish()
             activeSlot = null
@@ -702,6 +715,12 @@ public class VastAdSession internal constructor(
      * real pauses, and reported as such.
      */
     internal fun notePlayback(wantsPlayback: Boolean) {
+        // A start the session did not make — [release] settles its own debt
+        // before it plays — is the viewer's or the host's: the player is no
+        // longer paused on the session's account, so it owes no restart, and the
+        // next hold has to pause it again. Left owed, a creative that failed
+        // while held let the next break's ad play unheld behind the home screen.
+        if (wantsPlayback) heldPlayback = false
         val slot = activeSlot ?: return
         if (slot.finished || heldPlayback) return
         if (wantsPlayback) {
@@ -718,11 +737,24 @@ public class VastAdSession internal constructor(
         mutableState.value = VastAdState.Paused
     }
 
+    /**
+     * The playhead stuck while the player claimed to be playing. A creative
+     * already watched through counts as complete — the engine says so — and
+     * anything else is a 402, which the host hears whether or not the response
+     * gave an `<Error>` URI to tell, and which is the outcome the break reports.
+     */
     private fun stall(slot: VastAdSlot) {
         stopTicking()
-        val beacons = slot.engine.playbackDidStall()
-        send(beacons, slot)
-        if (beacons.any { it.kind is VastBeacon.Kind.Error }) listener?.onAdFailed(VastError.MEDIA_FILE_TIMEOUT, slot.ad)
+        val engine = slot.engine
+        val watchedThrough = engine.duration > 0 && engine.watched >= engine.duration * VastTrackingEngine.COMPLETION_THRESHOLD
+        send(engine.playbackDidStall(), slot)
+        if (!watchedThrough) {
+            // The engine has finished the creative by failing it, so without this
+            // the outcome would fall through to "finished short of the end": 405,
+            // for an ad the server and the listener were both told was a 402.
+            slot.failure = VastError.MEDIA_FILE_TIMEOUT
+            listener?.onAdFailed(VastError.MEDIA_FILE_TIMEOUT, slot.ad)
+        }
         endSlot(slot)
         breakPlayer?.abandon(slot)
     }
@@ -745,9 +777,13 @@ public class VastAdSession internal constructor(
         if (activeSlot === slot) activeSlot = null
     }
 
-    /** A skip beats everything; otherwise the creative counts as completed only if the engine actually finished it. */
+    /**
+     * A skip beats everything, then a failure the session decided; otherwise the
+     * creative counts as completed only if the engine actually finished it.
+     */
     private fun outcomeFor(slot: VastAdSlot): VastAdOutcome {
         if (slot.skipped) return VastAdOutcome.Skipped
+        slot.failure?.let { return VastAdOutcome.Failed(it) }
         val engine = slot.engine
         if (!engine.isFinished) return VastAdOutcome.Failed(VastError.MEDIA_FILE_TIMEOUT)
         return if (engine.watched >= engine.duration * VastTrackingEngine.COMPLETION_THRESHOLD) {
@@ -958,6 +994,9 @@ internal class VastAdSlot(
     var skipped = false
     var finished = false
     var outcome: VastAdOutcome? = null
+
+    /** Why the creative ended, when the session decided it rather than the engine — a stall. */
+    var failure: VastError? = null
     var clock: VastClock? = null
 
     /** Where the slot's ad group sits in the content period, set when it is given one. */
