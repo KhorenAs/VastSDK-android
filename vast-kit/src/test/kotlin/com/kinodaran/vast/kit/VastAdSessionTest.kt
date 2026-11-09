@@ -12,9 +12,10 @@ import com.kinodaran.vast.core.VastParser
 import com.kinodaran.vast.core.VastResourceLoader
 import com.kinodaran.vast.core.VastTick
 import com.kinodaran.vast.core.VastTrackingEngine
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -33,6 +34,7 @@ import kotlin.test.assertTrue
  * The scripted player is shared across creatives the way Media3's is: a pause
  * the session put on one creative is still on the player when the next begins.
  */
+@OptIn(ExperimentalCoroutinesApi::class) // UnconfinedTestDispatcher: the session reacts inside the call that drives it.
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class VastAdSessionTest {
@@ -235,7 +237,7 @@ class VastAdSessionTest {
             uptimeSeconds = { uptime },
             appLifecycle = app.registry,
         )
-        return VastAdSession(configuration, environment, Dispatchers.Unconfined).also {
+        return VastAdSession(configuration, environment, UnconfinedTestDispatcher()).also {
             it.listener = recorder
             it.attach(player)
             player.session = it
