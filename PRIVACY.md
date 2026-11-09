@@ -60,10 +60,11 @@ One file, and only for retries: beacons that could not be delivered, held in
 `noBackupFilesDir/vast-pending-beacons.tsv` and sent again on a later flush.
 
 - **Contents:** each failed beacon's URL with its macros already expanded, so it
-  can carry the advertising ID and consent string if the host supplied them, and
-  the time it was recorded.
-- **Limits:** at most 500 entries, oldest dropped first, and nothing older than
-  six hours.
+  can carry the advertising ID and consent string if the host supplied them, the
+  time it was first recorded, and how many retries it has failed.
+- **Limits:** at most 500 entries, oldest dropped first, nothing older than six
+  hours from when it was first recorded, and nothing retried more than five
+  times.
 - **Protection:** app-private storage, never included in device backups, and
   encrypted at rest by the platform on devices that ship with Android 10 or
   later. Removed with the app.

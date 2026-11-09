@@ -209,7 +209,11 @@ every vendor that asked is told `verificationNotExecuted` and every
 
 Beacons go out over `HttpURLConnection`: a 5xx is retried, a 4xx is not, and what
 fails is kept in an app-private retry queue and sent again on a later flush,
-across launches. A host with its own HTTP stack supplies a `VastBeaconTransport`.
+across launches. Retries are rationed: one batch of at most 50, at most every 30
+seconds per process, and a beacon that fails five of them is let go. An ad blocker
+or a DNS filter turns every tracker it knows into one that never answers;
+unrationed, that backlog went out again with every new beacon. A host with its
+own HTTP stack supplies a `VastBeaconTransport`.
 The SDK collects nothing of its own; [PRIVACY.md](PRIVACY.md) has what leaves the
 device, what is stored, and what to put in the Data safety form.
 

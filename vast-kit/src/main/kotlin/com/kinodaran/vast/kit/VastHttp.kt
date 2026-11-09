@@ -23,7 +23,9 @@ import java.nio.charset.CodingErrorAction
  * event identity, so a repeat is de-duplicated by the ad server rather than
  * double-counted. Anything that fails every attempt goes to [VastBeaconQueue],
  * which persists it and hands it back on a later flush, including after the app
- * has been relaunched.
+ * has been relaunched — rationed, so a tracker that never answers costs one
+ * request per beacon every [VastBeaconQueue.RETRY_INTERVAL_MILLIS] at most, not
+ * the whole backlog again with every new beacon.
  *
  * Built on `HttpURLConnection` so the SDK brings no HTTP client of its own into
  * a host that has already chosen one; a host that wants its OkHttp stack used
@@ -44,42 +46,51 @@ public class VastHttpTransport(
     override suspend fun fire(beacons: List<VastBeacon>) {
         if (beacons.isEmpty()) return
         // Earlier failures ride along with current traffic, so a retry costs no
-        // timer of its own and happens when the network is known to work.
-        val retries = queue?.drainEntries().orEmpty()
+        // timer of its own and happens when the network is known to work — as
+        // much as the queue's ration allows, which is one batch per interval for
+        // the whole process, not the whole backlog with every beacon.
+        val retries = queue?.takeForRetry().orEmpty()
         deliver(retries.map { Outgoing(it.url, it) } + beacons.map { Outgoing(it.url, null) })
     }
 
-    /** Sends whatever the queue holds, with no new beacon to carry it — at session start, say. */
+    /** Sends the next retry batch, with no new beacon to carry it — at session start, say. */
     public suspend fun flushPending() {
-        val retries = queue?.drainEntries().orEmpty()
+        val retries = queue?.takeForRetry().orEmpty()
         if (retries.isNotEmpty()) deliver(retries.map { Outgoing(it.url, it) })
     }
 
     /**
      * What fails goes back to the queue: a first send as new, a retry as the
-     * entry it was taken as — so a beacon that keeps failing still ages out from
-     * when it was first recorded, not from its latest failure.
+     * entry it was taken as, with one more retry counted — so a beacon that keeps
+     * failing still ages out from when it was first recorded, not from its
+     * latest failure, and is let go after [VastBeaconQueue.MAX_RETRIES].
      */
     @Suppress("InjectDispatcher") // HttpURLConnection blocks; that belongs on I/O, whatever the caller runs on.
     private suspend fun deliver(outgoing: List<Outgoing>) {
         val undelivered = withContext(Dispatchers.IO) {
             coroutineScope {
-                outgoing.map { beacon -> async { if (send(beacon.url)) null else beacon } }.awaitAll().filterNotNull()
+                outgoing.map { beacon ->
+                    // A first send gets its immediate retry; a queued one has had
+                    // that already, and one attempt per batch is what keeps a dead
+                    // tracker's backlog from doubling every flush.
+                    val attempts = if (beacon.queued == null) maxAttempts else 1
+                    async { if (send(beacon.url, attempts)) null else beacon }
+                }.awaitAll().filterNotNull()
             }
         }
         if (undelivered.isEmpty()) return
         VastLog.warning("${undelivered.size} beacon(s) undelivered")
         val queue = queue ?: return
         queue.enqueue(undelivered.filter { it.queued == null }.map { it.url })
-        queue.requeue(undelivered.mapNotNull { it.queued })
+        queue.requeue(undelivered.mapNotNull { it.queued?.let { entry -> entry.copy(retries = entry.retries + 1) } })
     }
 
     /** One request to make: `queued` is the entry a retry was taken as, and `null` on a first send. */
     private class Outgoing(val url: String, val queued: VastBeaconQueue.Entry?)
 
-    /** @return whether the beacon landed. */
-    private fun send(url: String): Boolean {
-        repeat(maxAttempts) {
+    /** @return whether the beacon landed — or can never land, which is the same for the queue. */
+    private fun send(url: String, attempts: Int): Boolean {
+        repeat(attempts) {
             val status = try {
                 get(url)
             } catch (_: MalformedURLException) {

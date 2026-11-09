@@ -86,6 +86,22 @@ class VastBeaconDeliveryTest {
         assertEquals(listOf(url("new")), aging.drain())
     }
 
+    /** A file written before retries were counted has two fields a line; it has to read the same. */
+    @Test
+    fun aRetryCountIsAThirdFieldOnTheLineAndBothShapesReadBack() = runBlocking {
+        val recorded = 1_700_000_000_000L
+        val file = File(directory, "format.tsv")
+        val writer = VastBeaconQueue(file) { recorded }
+        writer.requeue(listOf(VastBeaconQueue.Entry(recorded, url("a"), retries = 2)))
+        writer.enqueue(listOf(url("b")))
+
+        assertEquals("$recorded\t${url("a")}\t2\n$recorded\t${url("b")}\n", file.readText())
+        assertEquals(
+            listOf(VastBeaconQueue.Entry(recorded, url("a"), retries = 2), VastBeaconQueue.Entry(recorded, url("b"))),
+            VastBeaconQueue(file) { recorded }.drainEntries(),
+        )
+    }
+
     // MARK: - The transport
 
     @Test
@@ -172,6 +188,119 @@ class VastBeaconDeliveryTest {
     fun aMalformedUrlIsDroppedRatherThanCarriedForever() = runBlocking {
         VastHttpTransport(queue, maxAttempts = 1).fire(listOf(beacon("not a url")))
         assertEquals(0, queue.count())
+    }
+
+    // MARK: - The retry ration
+
+    /**
+     * Found by hand in a browser, in the web port, and the same here: with a
+     * tracker that never answers, every new beacon sent the whole backlog again,
+     * twice, so one ad produced dozens of requests per tracker. An ad blocker or
+     * a DNS filter makes a tracker like that of every tracker it knows.
+     */
+    @Test
+    fun theBacklogIsResentAtMostOncePerIntervalHoweverManyBeaconsFire() = runBlocking {
+        var now = 1_000_000_000L
+        val rationed = VastBeaconQueue(File(directory, "rationed.tsv")) { now }
+        server.status = 503
+        val transport = VastHttpTransport(rationed, maxAttempts = 2)
+
+        val events = listOf("impression", "start", "firstQuartile", "midpoint", "thirdQuartile", "complete")
+        for (event in events) {
+            transport.fire(listOf(beacon(server.url(event))))
+            now += 1_000
+        }
+
+        assertEquals(3, server.requested.count { it == "/impression" }, "its own two attempts, then one retry within the interval")
+        assertEquals(13, server.requested.size, "six beacons, two attempts each, and one retry batch")
+        assertEquals(6, rationed.count())
+    }
+
+    @Test
+    fun aQueuedBeaconGetsOneAttemptPerBatchWhereAFirstSendGetsTwo() = runBlocking {
+        server.status = 503
+        queue.enqueue(listOf(server.url("old")))
+
+        VastHttpTransport(queue, maxAttempts = 2).fire(listOf(beacon(server.url("new"))))
+
+        assertEquals(listOf("/new", "/new", "/old"), server.requested.sorted())
+    }
+
+    @Test
+    fun aRetryWaitsForTheIntervalToPass() = runBlocking {
+        var now = 1_000_000_000L
+        val rationed = VastBeaconQueue(File(directory, "rationed.tsv")) { now }
+        server.status = 503
+        rationed.enqueue(listOf(server.url("impression")))
+        val transport = VastHttpTransport(rationed, maxAttempts = 2)
+
+        transport.flushPending()
+        transport.flushPending()
+        assertEquals(1, server.requested.size, "once per interval")
+
+        now += VastBeaconQueue.RETRY_INTERVAL_MILLIS
+        transport.flushPending()
+        assertEquals(2, server.requested.size)
+    }
+
+    /** The ration is measured on the wall clock, which can be set back; that must not stop retries until it catches up. */
+    @Test
+    fun aClockSetBackDoesNotHoldRetriesBack() = runBlocking {
+        var now = 1_000_000_000L
+        val rationed = VastBeaconQueue(File(directory, "rationed.tsv")) { now }
+        server.status = 503
+        rationed.enqueue(listOf(server.url("impression")))
+        val transport = VastHttpTransport(rationed, maxAttempts = 2)
+
+        transport.flushPending()
+        now -= 60 * 60 * 1000L
+        transport.flushPending()
+
+        assertEquals(2, server.requested.size)
+    }
+
+    @Test
+    fun aRetryBatchIsCappedOldestFirstAndTheRestStaysQueued() = runBlocking {
+        var now = 1_000_000_000L
+        val rationed = VastBeaconQueue(File(directory, "rationed.tsv")) { now }
+        repeat(VastBeaconQueue.RETRY_BATCH + 10) {
+            rationed.enqueue(listOf(server.url("b$it")))
+            now += 1
+        }
+
+        VastHttpTransport(rationed, maxAttempts = 1).flushPending()
+
+        assertEquals((0 until VastBeaconQueue.RETRY_BATCH).map { "/b$it" }.toSet(), server.requested.toSet())
+        assertEquals(VastBeaconQueue.RETRY_BATCH, server.requested.size)
+        assertEquals(10, rationed.count())
+    }
+
+    @Test
+    fun aBeaconIsLetGoAfterMaxRetriesFailedBatchesWellBeforeItWouldAgeOut() = runBlocking {
+        var now = 1_000_000_000L
+        val rationed = VastBeaconQueue(File(directory, "rationed.tsv")) { now }
+        server.status = 503
+        rationed.enqueue(listOf(server.url("blocked")))
+        val transport = VastHttpTransport(rationed, maxAttempts = 2)
+
+        repeat(VastBeaconQueue.MAX_RETRIES + 2) {
+            transport.flushPending()
+            now += VastBeaconQueue.RETRY_INTERVAL_MILLIS
+        }
+
+        assertEquals(VastBeaconQueue.MAX_RETRIES, server.requested.size)
+        assertEquals(0, rationed.count())
+    }
+
+    /** A host builds a session per break, and the session a transport: the ration has to be the process's, not theirs. */
+    @Test
+    fun everyTransportInTheProcessSharesOneRation() = runBlocking {
+        server.status = 503
+        queue.enqueue(listOf(server.url("old")))
+
+        repeat(5) { VastHttpTransport(queue, maxAttempts = 2).flushPending() }
+
+        assertEquals(listOf("/old"), server.requested.toList())
     }
 
     // MARK: - The loader
