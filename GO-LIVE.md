@@ -44,10 +44,11 @@ and whoever reads them should know why. (#14)
 **5. A shared conformance suite.** Parity with the Apple SDK is proved by the
 ported tests. Golden files exported from the Apple Harness would prove it
 byte for byte, and fail the moment either side changes behaviour; that needs a
-small change in VastSDK-apple. (#3, #11) One gap is known: tests in the web port
-found that a stall reported 402 but ended as 405, and that the retry queue
-re-stamped failed retries and re-sent its whole backlog with every beacon. They are
-fixed here and on the web; by inspection, VastSDK-apple still has all three.
+small change in VastSDK-apple. (#3, #11) Until then, a gap shows up only when
+another port's tests find it. The web port's tests found that a stall reported
+402 but ended as 405, and that the retry queue re-stamped failed retries and sent
+its whole backlog again with every beacon. All three are now fixed here, on the
+web, and in VastSDK-apple 1.8.4.
 
 **6. An API check for the Android modules.** `vast-core`'s public API is in
 `vast-core/api/vast-core.api`, and a change to it fails the build until the dump
