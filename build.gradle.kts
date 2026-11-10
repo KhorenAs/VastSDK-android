@@ -17,7 +17,7 @@ allprojects {
     // repository does not have, so on JitPack the build takes JitPack's names.
     val jitpack = System.getenv("JITPACK") == "true"
     group = if (jitpack) "com.github.KhorenAs.VastSDK-android" else "com.kinodaran.vast"
-    version = if (jitpack) System.getenv("VERSION") else "0.1.1"
+    version = if (jitpack) System.getenv("VERSION") else "0.1.2"
 }
 
 // detekt on every module, from one config that lists only what differs from the
@@ -43,6 +43,20 @@ subprojects {
             // Central. A local or JitPack build publishes unsigned, which is all
             // either of those needs.
             if (providers.gradleProperty("signingInMemoryKey").isPresent) signAllPublications()
+            // An empty javadoc jar for the Android modules, said here because the
+            // default asks AGP for one, and AGP's bundled Dokka cannot read a
+            // JDK 25 version string: it failed the 0.1.1 release on "25.0.5".
+            // Maven Central asks only that the jar exist, and what an IDE reads
+            // for a Kotlin library is the sources jar, which is still published.
+            pluginManager.withPlugin("com.android.library") {
+                configure(
+                    com.vanniktech.maven.publish.AndroidSingleVariantLibrary(
+                        javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
+                        sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
+                        variant = "release",
+                    ),
+                )
+            }
             pom {
                 name = project.name
                 description = provider { project.description }
