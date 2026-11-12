@@ -23,12 +23,12 @@ public class VastMediaFileSelector {
         val supportedMimeTypes: Set<String> = MEDIA3_DEFAULTS,
         /** Soft ceiling in kbps. Higher-bitrate files rank lower but stay eligible. */
         val preferredBitrate: Int? = null,
-        /** `false` where the player has no HLS pipeline. */
+        /** `false` where the player has no streaming pipeline. */
         val supportsStreaming: Boolean = true,
     ) {
         public companion object {
             /**
-             * What Media3 plays with `media3-exoplayer` and `media3-exoplayer-hls`.
+             * What Media3 plays with the progressive, HLS and DASH source modules.
              *
              * QuickTime is left out although the Apple SDK lists it: Media3's MP4
              * extractor reads some `.mov` files and not others, and a creative that
@@ -37,7 +37,7 @@ public class VastMediaFileSelector {
              */
             public val MEDIA3_DEFAULTS: Set<String> = setOf(
                 "video/mp4", "video/x-m4v", "video/3gpp", "video/webm",
-                "application/x-mpegurl", "application/vnd.apple.mpegurl",
+                "application/x-mpegurl", "application/vnd.apple.mpegurl", "application/dash+xml",
             )
         }
     }

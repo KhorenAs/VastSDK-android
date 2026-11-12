@@ -36,9 +36,9 @@ kotlin {
 dependencies {
     api(project(":vast-core"))
     api(libs.media3.exoplayer)
-    // HLS creatives are in the default MIME list, so the pipeline to play them is
-    // part of the library rather than something a host has to know to add.
+    // Match the streaming formats accepted by the default media selector.
     implementation(libs.media3.exoplayer.hls)
+    implementation(libs.media3.exoplayer.dash)
     implementation(libs.kotlinx.coroutines.android)
     // Whether the app is on screen, which decides whether an ad may play.
     implementation(libs.lifecycle.process)

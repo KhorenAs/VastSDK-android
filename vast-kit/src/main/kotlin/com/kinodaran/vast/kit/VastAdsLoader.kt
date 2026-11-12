@@ -492,11 +492,11 @@ public class VastAdsLoader internal constructor(private val session: VastAdSessi
         }
 
         /**
-         * Media3's spelling of the HLS type, which its source factory matches
-         * exactly. Responses write it in every case there is.
+         * Media3 uses the MIME type to open manifests whose URLs lack a file suffix.
          */
         private fun mimeTypeFor(type: String): String? = when (type.lowercase()) {
             "application/x-mpegurl", "application/vnd.apple.mpegurl" -> MimeTypes.APPLICATION_M3U8
+            "application/dash+xml" -> MimeTypes.APPLICATION_MPD
             "" -> null
             else -> type
         }

@@ -8,11 +8,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.media3.common.AdViewProvider
+import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.dash.DashMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ads.AdsMediaSource
 import androidx.media3.test.utils.FakeClock
 import androidx.media3.test.utils.FakeMediaSource
@@ -99,6 +104,22 @@ class VastAdsLoaderTest {
     }
 
     // MARK: - Playing through
+
+    @Test
+    fun dashIsSelectedAndUsesMedia3DashSourceForAnExtensionlessUrl() {
+        val dashUrl = "https://cdn.test/asset?format=dash"
+        val dash = """<MediaFile delivery="streaming" type="Application/Dash+XML" width="1280" height="720">$dashUrl</MediaFile>"""
+        val xml = inLine("adaptive").replace("<MediaFiles>", "<MediaFiles>$dash")
+        val session = session(mapOf(TAG to xml))
+        var selected: MediaItem? = null
+        start(session, onAdMediaItem = { selected = it })
+        runUntil { selected != null }
+        val item = checkNotNull(selected)
+        assertEquals(dashUrl, item.localConfiguration?.uri.toString())
+        assertEquals(MimeTypes.APPLICATION_MPD, item.localConfiguration?.mimeType)
+        assertTrue(DefaultMediaSourceFactory(context).createMediaSource(item) is DashMediaSource)
+    }
+
 
     @Test
     fun aSingleAdPlaysToTheEndAndTheContentFollows() {
@@ -524,10 +545,20 @@ class VastAdsLoaderTest {
         return VastAdSession(configuration, environment, Dispatchers.Main.immediate).also { it.listener = recorder }
     }
 
-    private fun start(session: VastAdSession, tag: Uri = Uri.parse(TAG)) {
+    private fun start(
+        session: VastAdSession,
+        tag: Uri = Uri.parse(TAG),
+        onAdMediaItem: (MediaItem) -> Unit = {},
+    ) {
         session.adsLoader.setPlayer(player)
         val content = FakeMediaSource(FakeTimeline(FakeTimeline.TimelineWindowDefinition.Builder().setDurationUs(30_000_000).build()))
-        val adSource = FakeMediaSourceFactory(FakeTimeline.TimelineWindowDefinition.Builder().setDurationUs(10_000_000))
+        val fake = FakeMediaSourceFactory(FakeTimeline.TimelineWindowDefinition.Builder().setDurationUs(10_000_000))
+        val adSource = object : MediaSource.Factory by fake {
+            override fun createMediaSource(mediaItem: MediaItem): MediaSource {
+                onAdMediaItem(mediaItem)
+                return fake.createMediaSource(mediaItem)
+            }
+        }
         val source = AdsMediaSource(content, DataSpec(tag), "ads-1", adSource, session.adsLoader, AdViewProvider { FrameLayout(context) })
         player.setMediaSource(source)
         player.prepare()
